@@ -37,7 +37,7 @@ function Objekts() {
     <li key={index}>
       {obj.season} {obj.member} {obj.collection_no} {obj.class_}
       <br />
-      <img src={obj.front_image} alt='front_image' width="100" />
+      <img src={obj.front_image} alt='front_image' width="100" loading="lazy"/>
     </li>
   ));
 
