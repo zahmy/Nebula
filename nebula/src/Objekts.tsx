@@ -13,9 +13,10 @@ function Objekts() {
   const [objekts, setObjekts] = useState<Objekt[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState<string>('');
 
   useEffect(() => {
-    fetchObjekts()
+    fetchObjekts(selectedSeason || undefined)
       .then((data) => {
         setObjekts(data);
         setLoading(false);
@@ -24,9 +25,13 @@ function Objekts() {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [selectedSeason]);
 
   const loadingOrError = loading ? 'Loading...' : error ? `Error: ${error}` : '';
+
+  const handleSeasonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedSeason(e.target.value);
+  };
 
   const showObjekts = objekts.map((obj, index) => (
     <li key={index}>
@@ -39,6 +44,14 @@ function Objekts() {
   return (
     <div>
       {loadingOrError}
+      <select value={selectedSeason} onChange={handleSeasonChange}>
+        <option value="">Season</option>
+        <option value="Atom01">A</option>
+        <option value="Binary01">B</option>
+        <option value="Cream01">C</option>
+        <option value="Divine01">D</option>
+        <option value="Ever01">E</option>
+      </select>
       <ul>
         {showObjekts}
       </ul>

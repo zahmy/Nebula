@@ -9,10 +9,16 @@ export interface Objekt {
   front_image: string;
 }
 
-export async function fetchObjekts(): Promise<Objekt[]> {
+export async function fetchObjekts(season?: string): Promise<Objekt[]> {
+  const baseSql = "SELECT c.season, c.member, c.class, c.collection_no, c.front_image FROM collection c WHERE c.artist = 'tripleS'";
+  const seasonFilter = season ? ` AND c.season = $1` : '';
+  const orderBy = " ORDER BY created_at DESC";
+  const sql = baseSql + seasonFilter + orderBy;
+
   const requestBody = {
-    sql: "SELECT c.season, c.member, c.class, c.collection_no, c.front_image FROM collection c WHERE c.artist = 'tripleS' ORDER BY created_at DESC",
+    sql,
     method: 'all',
+    ...(season && {params : [season]}), 
   };
 
   //console.log('送出的body:', JSON.stringify(requestBody));
