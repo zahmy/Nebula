@@ -85,6 +85,11 @@ services:
     depends_on:
       - drizzle-proxy
       - processor    
+    volumes:
+      - ./nebula:/app
+      - /app/node_modules
+    environment:
+      - WATCHPACK_POLLING=true
 volumes:
   db:
     driver: local

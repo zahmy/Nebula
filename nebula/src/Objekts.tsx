@@ -26,19 +26,21 @@ function Objekts() {
       });
   }, []);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  const loadingOrError = loading ? 'Loading...' : error ? `Error: ${error}` : '';
+
+  const showObjekts = objekts.map((obj, index) => (
+    <li key={index}>
+      {obj.season} {obj.member} {obj.collection_no} {obj.class_}
+      <br />
+      <img src={obj.front_image} alt='front_image' width="100" />
+    </li>
+  ));
 
   return (
     <div>
+      {loadingOrError}
       <ul>
-        {objekts.map((obj, index) => (
-          <li key={index}>
-            {obj.season} {obj.member} {obj.collection_no} {obj.class_}
-            <br />
-            <img src={obj.front_image} alt='front_image' width="100" />
-          </li>
-        ))}
+        {showObjekts}
       </ul>
     </div>
   );

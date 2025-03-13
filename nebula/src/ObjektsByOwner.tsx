@@ -36,10 +36,21 @@ function ObjektsByOwner() {
       });
   };
 
+  const showObjektsByOwner = objekts.map((obj, index) => (
+    <li key={index}>
+      {obj.season} {obj.member} {obj.class_} {obj.collection_no} {obj.serial} {obj.received_at} 
+      <br />
+      <img src={obj.front_image} alt="front_image" width="100" />
+    </li>
+  ))
+
+  const loadingOrError = loading ? 'Loading...' : error ? `Error: ${error}` : '';
+  const remind = !loading && !error && objekts.length === 0 ? 'Please enter an address to search' : '';
+
   return (
     <div>
       <div>
-      <input
+        <input
           type="text"
           value={address}
           onChange={(e) => setAddress(e.target.value.toLowerCase())}
@@ -49,23 +60,13 @@ function ObjektsByOwner() {
           onClick={handleFetchObjekts}
           disabled={loading}
         >{loading ? 'Loading...' : 'Search'}</button>
-    </div>  
+      </div>  
 
-    {loading && <div>Loading...</div>}
-    {error && <div>Error: {error}</div>}
-
-      {!loading && !error && objekts.length === 0 && (
-        <div>Please enter an address to search</div>
-      )}
+      {loadingOrError}
+      {remind}
 
       <ul>
-        {objekts.map((obj, index) => (
-          <li key={index}>
-            {obj.season} {obj.member} {obj.class_} {obj.collection_no} {obj.serial} {obj.received_at} 
-            <br />
-            <img src={obj.front_image} alt="front_image" width="100" />
-          </li>
-        ))}
+        {showObjektsByOwner}
       </ul>
     </div>
   );
