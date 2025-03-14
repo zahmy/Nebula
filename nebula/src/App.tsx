@@ -5,13 +5,17 @@ import ObjektsByOwner from './ObjektsByOwner';
 function App() {
   return (
     <div>
-      <nav>
-        <Link to="/">
-          <button>Objekts</button>
-        </Link>
-        <Link to="/by-owner">
-          <button>Search by owner</button>
-        </Link>
+      <nav className='flex justify-between items-center bg-blue-950 p-5'>
+        <h1 className="text-4xl font-bold">Nebula</h1>
+        <div className="flex space-x-10">
+          <Link to="/">
+            <button className="btn btn-primary">Objekts</button>
+          </Link>
+          <Link to="/by-owner">
+            <button className="btn btn-primary">Onwer</button>
+          </Link>
+        </div>
+        <div className="w-32" />
       </nav>
 
       <Routes>

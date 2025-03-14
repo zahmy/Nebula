@@ -13,7 +13,7 @@ export interface ObjektByOwner {
 
 export async function fetchObjekts(ownerAddress: string): Promise<ObjektByOwner[]> {
   const requestBody = {
-    sql: "SELECT c.season, c.member, c.class, c.collection_no, o.received_at, o.serial, c.front_image FROM objekt o JOIN collection c ON o.collection_id = c.id WHERE c.artist = 'tripleS' AND o.owner = $1",
+    sql: "SELECT c.season, c.member, c.class, c.collection_no, o.serial, o.received_at, c.front_image FROM objekt o JOIN collection c ON o.collection_id = c.id WHERE c.artist = 'tripleS' AND o.owner = $1",
     params: [ownerAddress],
     method: 'all',
   };

@@ -29,32 +29,37 @@ function Objekts() {
 
   const loadingOrError = loading ? 'Loading...' : error ? `Error: ${error}` : '';
 
-  const handleSeasonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSeason(e.target.value);
+  const handleDropdownSelect = (season: string) => {
+    setSelectedSeason(season);
   };
 
   const showObjekts = objekts.map((obj, index) => (
-    <li key={index}>
-      {obj.season} {obj.member} {obj.collection_no} {obj.class_}
-      <br />
-      <img src={obj.front_image} alt='front_image' width="100" loading="lazy"/>
-    </li>
+    <div className="m-2 min-w-[150px] text-center" key={index}>
+      <div className="mb-2">
+        {obj.season} {obj.member} {obj.collection_no} {obj.class_}
+      </div>
+      <img src={obj.front_image} alt='front_image' className="w-full max-w-[220px] mx-auto" loading="lazy"/>
+    </div>
   ));
 
   return (
     <div>
+      <div>
+      </div>
       {loadingOrError}
-      <select value={selectedSeason} onChange={handleSeasonChange}>
-        <option value="">Season</option>
-        <option value="Atom01">A</option>
-        <option value="Binary01">B</option>
-        <option value="Cream01">C</option>
-        <option value="Divine01">D</option>
-        <option value="Ever01">E</option>
-      </select>
-      <ul>
+      <div className="dropdown dropdown-start">
+        <div tabIndex={0} role="button" className="btn m-2 bg-gray-700 rounded-box outline -outline-offset-1 outline-blue-100/50">{selectedSeason || 'Season'}</div>
+        <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+          <li><a onClick={() => handleDropdownSelect('Atom01')}>Atom01</a></li>
+          <li><a onClick={() => handleDropdownSelect('Binary01')}>Binary01</a></li>
+          <li><a onClick={() => handleDropdownSelect('Cream01')}>Cream01</a></li>
+          <li><a onClick={() => handleDropdownSelect('Divine01')}>Divine01</a></li>
+          <li><a onClick={() => handleDropdownSelect('Ever01')}>Ever01</a></li>
+        </ul>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {showObjekts}
-      </ul>
+      </div>
     </div>
   );
 }
