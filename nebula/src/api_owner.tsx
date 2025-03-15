@@ -11,11 +11,29 @@ export interface ObjektByOwner {
   front_image: string;
 }
 
-export async function fetchObjekts(ownerAddress: string): Promise<ObjektByOwner[]> {
+export async function fetchObjekts(ownerAddress: string, season: string): Promise<ObjektByOwner[]> {
+  const baseSql = "SELECT c.season, c.member, c.class, c.collection_no, o.serial, o.received_at, c.front_image FROM objekt o JOIN collection c ON o.collection_id = c.id WHERE c.artist = 'tripleS'";
+  const params: string[] = [];
+  let sql = baseSql;
+  let paramIndex = 1;
+
+  if (ownerAddress) {
+    sql += ` AND o.owner = $${paramIndex}`;
+    params.push(ownerAddress);
+    paramIndex++;
+  }
+  if (season) {
+    sql += ` AND c.season = $${paramIndex}`;
+    params.push(season);
+    paramIndex++;
+  }
+
+  sql += " ORDER BY o.received_at DESC";
+
   const requestBody = {
-    sql: "SELECT c.season, c.member, c.class, c.collection_no, o.serial, o.received_at, c.front_image FROM objekt o JOIN collection c ON o.collection_id = c.id WHERE c.artist = 'tripleS' AND o.owner = $1",
-    params: [ownerAddress],
+    sql,
     method: 'all',
+    ...(params.length > 0 && { params }), 
   };
 
   //console.log('送出的body:', JSON.stringify(requestBody));

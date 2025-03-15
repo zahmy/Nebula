@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fetchObjekts } from './api_owner';
+import ShowObjekts from './ShowObjekts';
 
 interface ObjektByOwner {
   season: string;
@@ -16,16 +17,50 @@ function ObjektsByOwner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState('');
+  const [selectedSeason, setSelectedSeason] = useState<string>('');
+  const [columns, setColumns] = useState(getColumns());
 
-  const handleFetchObjekts = () => {
-    if (!address) {
-      setError('Please enter an address');
+  //不同視窗寬度對應的Objekts顯示行數
+  function getColumns() {
+    if (window.innerWidth >= 1024) return 5; 
+    if (window.innerWidth >= 768) return 3;  
+    if (window.innerWidth >= 640) return 2;  
+    return 1;                                
+  }
+
+  //隨著視窗寬度動態調整Objekts顯示行數
+  useEffect(() => {
+    const handleResize = () => {
+      const newColumns = getColumns();
+      setColumns(newColumns);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  //全部Objekts所佔列數
+  const rows = Math.ceil(objekts.length / columns);
+
+  //一個二維陣列，將Objekts以列為單位存放（因為渲染是一列一列的）
+  const rowItems = Array.from({ length: rows }, (_, rowIndex) =>
+    objekts.slice(rowIndex * columns, (rowIndex + 1) * columns)
+  );
+  
+   //處理season篩選條件，只監聽season不監聽address，不然還沒按search結果就出來了 
+  const addressRef=useRef(address);
+
+  useEffect(() => {
+    addressRef.current = address;
+  }, [address]);
+
+  useEffect(() => {
+    const currentAddress = addressRef.current;
+    if (!currentAddress) {
       return;
     }
-
     setLoading(true);
     setError(null);
-    fetchObjekts(address)
+    fetchObjekts(currentAddress, selectedSeason)
       .then((data) => {
         setObjekts(data);
         setLoading(false);
@@ -34,19 +69,35 @@ function ObjektsByOwner() {
         setError(err.message);
         setLoading(false);
       });
+  },[selectedSeason]);
+
+  //另外處理搜尋按鈕
+  const handleFetchObjekts = () => {
+    if (!address) {
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    fetchObjekts(address, '')
+      .then((data) => {
+        setObjekts(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+        setObjekts([]);
+      });
   };
 
-  const showObjektsByOwner = objekts.map((obj, index) => (
-    <div className="m-2 min-w-[150px] text-center" key={index}>
-      <div className="mb-2">
-        {obj.season} {obj.member} {obj.class_} {obj.collection_no} {obj.serial} {obj.received_at} 
-      </div>
-      <img src={obj.front_image} alt="front_image" className="w-full max-w-[220px] mx-auto" loading="lazy"/>
-    </div>
-  ))
+  const remind = !address.length ? 'Please enter an address to search' : '';
 
-  const loadingOrError = loading ? 'Loading...' : error ? `Error: ${error}` : '';
-  const remind = !loading && !error && objekts.length === 0 ? 'Please enter an address to search' : '';
+  //處理Season篩選條件選單
+  const handleDropdownSelect = (season: string) => {
+    setSelectedSeason(season);
+  };
+
+  const SEASONS = ['Atom01', 'Binary01', 'Cream01', 'Divine01', 'Ever01'];
 
   return (
     <div>
@@ -65,10 +116,21 @@ function ObjektsByOwner() {
         >{loading ? 'Loading...' : 'Search'}</button>
       </div>  
 
-      {loadingOrError}
       {remind}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {showObjektsByOwner}
+      <div className="min-h-screen">
+        <div className="dropdown dropdown-start">
+          <div tabIndex={0} role="button" className="btn m-2 bg-gray-700 rounded-box outline -outline-offset-1 outline-blue-100/50">
+            {selectedSeason || 'Season'}
+          </div>
+          <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-sm">
+          {SEASONS.map((season) => (
+            <li key={season}>
+              <a onClick={() => handleDropdownSelect(season)}>{season}</a>
+            </li>
+          ))}
+          </ul>
+        </div>
+        <ShowObjekts loading={loading} error={error} rowItems={rowItems}/>
       </div>
     </div>
   );

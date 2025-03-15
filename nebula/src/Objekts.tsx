@@ -9,6 +9,7 @@ function Objekts() {
   const [selectedSeason, setSelectedSeason] = useState<string>('');
   const [columns, setColumns] = useState(getColumns());
 
+  //不同視窗寬度對應的Objekts顯示行數
   function getColumns() {
     if (window.innerWidth >= 1024) return 5; 
     if (window.innerWidth >= 768) return 3;  
@@ -16,6 +17,7 @@ function Objekts() {
     return 1;                                
   }
 
+  //隨著視窗寬度動態調整Objekts顯示行數
   useEffect(() => {
     const handleResize = () => {
       const newColumns = getColumns();
@@ -24,28 +26,29 @@ function Objekts() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const fetchData = () => {
-    fetchObjekts(selectedSeason)
-      .then((data) => {
-        setObjekts(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  };
   
-  useEffect(() => {
-    fetchData();
-  }, [selectedSeason]);
-
+  //全部Objekts所佔列數
   const rows = Math.ceil(objekts.length / columns);
+
+  //一個二維陣列，將Objekts以列為單位存放（因為渲染是一列一列的）
   const rowItems = Array.from({ length: rows }, (_, rowIndex) =>
     objekts.slice(rowIndex * columns, (rowIndex + 1) * columns)
   );
   
+  //透過API取得Objekts
+  useEffect(() => {
+    fetchObjekts(selectedSeason)
+    .then((data) => {
+      setObjekts(data);
+      setLoading(false);
+    })
+    .catch((err) => {
+      setError(err.message);
+      setLoading(false);
+    });  
+  }, [selectedSeason]);
+
+  //處理Season篩選條件選單
   const handleDropdownSelect = (season: string) => {
     setSelectedSeason(season);
   };
