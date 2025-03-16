@@ -11,7 +11,7 @@ export interface ObjektByOwner {
   front_image: string;
 }
 
-export async function fetchObjekts(ownerAddress: string, season: string): Promise<ObjektByOwner[]> {
+export async function fetchObjekts(ownerAddress: string, season: string[] = [], class_: string[] = [], member: string[] = []): Promise<ObjektByOwner[]> {
   const baseSql = "SELECT c.season, c.member, c.class, c.collection_no, o.serial, o.received_at, c.front_image FROM objekt o JOIN collection c ON o.collection_id = c.id WHERE c.artist = 'tripleS'";
   const params: string[] = [];
   let sql = baseSql;
@@ -22,10 +22,25 @@ export async function fetchObjekts(ownerAddress: string, season: string): Promis
     params.push(ownerAddress);
     paramIndex++;
   }
-  if (season) {
-    sql += ` AND c.season = $${paramIndex}`;
-    params.push(season);
-    paramIndex++;
+  if (season.length > 0) {
+    const seasonPlaceholders = season.map((_, index) => `$${paramIndex + index}`).join(', ');
+    sql += ` AND c.season IN (${seasonPlaceholders})`;
+    params.push(...season);
+    paramIndex += season.length;
+  }
+  if (class_.length > 0) {
+    const classPlaceholders = class_.map((_, index) => `$${paramIndex + index}`).join(', ');
+    sql += ` AND c.class IN (${classPlaceholders})`;
+    params.push(...class_);
+    paramIndex += class_.length;
+  }
+
+  // 處理member過濾條件
+  if (member.length > 0) {
+    const mamberPlaceholders = member.map((_, index) => `$${paramIndex + index}`).join(', ');
+    sql += ` AND c.member IN (${mamberPlaceholders})`;
+    params.push(...member);
+    paramIndex += member.length;
   }
 
   sql += " ORDER BY o.received_at DESC";

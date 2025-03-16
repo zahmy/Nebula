@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchObjekts } from './api_owner';
 import ShowObjekts from './ShowObjekts';
+import FilterDropdown from './DropdownFilter';
+import { Input } from './components/ui/input';
+import { Button } from './components/ui/button';
+import { fetchAllCollections, fetchUniqueSeasons, fetchUniqueClasses, fetchUniqueMembers } from './api_objekts';
 
 interface ObjektByOwner {
   season: string;
@@ -17,10 +21,16 @@ function ObjektsByOwner() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [address, setAddress] = useState('');
-  const [selectedSeason, setSelectedSeason] = useState<string>('');
+  const [selectedSeason, setSelectedSeason] = useState<string[]>([]);
+  const [selectedClass, setSelectedClass] = useState<string[]>([]);
+  const [selectedMember, setSelectedMember] = useState<string[]>([]);  
   const [columns, setColumns] = useState(getColumns());
+  const [collections, setCollections] = useState<string[]>([]);
+  const [seasons, setSeasons] = useState<string[]>([]);
+  const [classes, setClasses] = useState<string[]>([]);
+  const [members, setMembers] = useState<string[]>([]);
 
-  //不同視窗寬度對應的Objekts顯示行數
+  // 不同視窗寬度對應的Objekts顯示行數
   function getColumns() {
     if (window.innerWidth >= 1024) return 5; 
     if (window.innerWidth >= 768) return 3;  
@@ -28,7 +38,7 @@ function ObjektsByOwner() {
     return 1;                                
   }
 
-  //隨著視窗寬度動態調整Objekts顯示行數
+  // 隨著視窗寬度動態調整Objekts顯示行數
   useEffect(() => {
     const handleResize = () => {
       const newColumns = getColumns();
@@ -38,21 +48,22 @@ function ObjektsByOwner() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  //全部Objekts所佔列數
+  // 全部Objekts所佔列數
   const rows = Math.ceil(objekts.length / columns);
 
-  //一個二維陣列，將Objekts以列為單位存放（因為渲染是一列一列的）
+  // 一個二維陣列，將Objekts以列為單位存放（因為渲染是一列一列的）
   const rowItems = Array.from({ length: rows }, (_, rowIndex) =>
     objekts.slice(rowIndex * columns, (rowIndex + 1) * columns)
   );
   
-   //處理season篩選條件，只監聽season不監聽address，不然還沒按search結果就出來了 
+  // 處理season篩選條件，只監聽season不監聽address，不然還沒按search結果就出來了 
   const addressRef=useRef(address);
 
   useEffect(() => {
     addressRef.current = address;
   }, [address]);
 
+  // 透過API取得Objekts
   useEffect(() => {
     const currentAddress = addressRef.current;
     if (!currentAddress) {
@@ -60,7 +71,7 @@ function ObjektsByOwner() {
     }
     setLoading(true);
     setError(null);
-    fetchObjekts(currentAddress, selectedSeason)
+    fetchObjekts(currentAddress, selectedSeason, selectedClass, selectedMember)
       .then((data) => {
         setObjekts(data);
         setLoading(false);
@@ -69,16 +80,16 @@ function ObjektsByOwner() {
         setError(err.message);
         setLoading(false);
       });
-  },[selectedSeason]);
+  },[selectedSeason, selectedClass, selectedMember]);
 
-  //另外處理搜尋按鈕
+  // 另外處理搜尋按鈕
   const handleFetchObjekts = () => {
     if (!address) {
       return;
     }
     setLoading(true);
     setError(null);
-    fetchObjekts(address, '')
+    fetchObjekts(address, [])
       .then((data) => {
         setObjekts(data);
         setLoading(false);
@@ -92,44 +103,95 @@ function ObjektsByOwner() {
 
   const remind = !address.length ? 'Please enter an address to search' : '';
 
-  //處理Season篩選條件選單
-  const handleDropdownSelect = (season: string) => {
-    setSelectedSeason(season);
+  const toggleSelection = <T extends string>(prev: T[], value: T): T[] =>
+    value
+      ? prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value]
+      : [];
+
+  const handleSeasonChange = (season: string) => {
+    setSelectedSeason((prevSelectedSeasons) => toggleSelection(prevSelectedSeasons, season));
   };
 
-  const SEASONS = ['Atom01', 'Binary01', 'Cream01', 'Divine01', 'Ever01'];
+  const handleClassChange = (class_: string) => {
+    setSelectedClass((prevSelectedClasses) => toggleSelection(prevSelectedClasses, class_));
+  };
+
+  const handleMemberChange = (member: string) => {
+    setSelectedMember((prevSelectedMembers) => toggleSelection(prevSelectedMembers, member));
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetchAllCollections(),
+      fetchUniqueSeasons(),
+      fetchUniqueClasses(),
+      fetchUniqueMembers(),
+    ])
+      .then(([collectionNosData, seasonsData, classesData, membersData]) => {
+        setCollections(collectionNosData);
+        setSeasons(seasonsData);
+        setClasses(classesData);
+        setMembers(membersData);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching data:", err);
+        setError("Failed to load data");
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <div>
-      <div>
-        <input
+      <div className="flex items-center mt-5">
+        <Input
           type="text"
           value={address}
-          className="input w-50 mr-2 mt-5"
+          className="w-50 mr-2"
           onChange={(e) => setAddress(e.target.value.toLowerCase())}
           placeholder="Enter an address"
         />
-        <button
+        <Button
           onClick={handleFetchObjekts}
           disabled={loading}
-          className="btn btn-accent btn-sm mr-5 mt-5"
-        >{loading ? 'Loading...' : 'Search'}</button>
+          className="bg-accent text-white hover:bg-accent/90 mr-5"
+        >
+          {loading ? 'Loading...' : 'Search'}
+        </Button>
       </div>  
 
       {remind}
+
       <div className="min-h-screen">
-        <div className="dropdown dropdown-start">
-          <div tabIndex={0} role="button" className="btn m-2 bg-gray-700 rounded-box outline -outline-offset-1 outline-blue-100/50">
-            {selectedSeason || 'Season'}
+        <div className='flex'>
+          {/* Season選單 */}  
+          <FilterDropdown
+            label="Season"
+            items={seasons}
+            selectedItems={selectedSeason}
+            onSelectionChange={handleSeasonChange}
+          />
+
+          {/* Class選單 */}
+          <FilterDropdown
+            label="Class"
+            items={classes}
+            selectedItems={selectedClass}
+            onSelectionChange={handleClassChange}
+          />
+
+          {/* Member選單 */}
+          <FilterDropdown
+            label="Memeber"
+            items={members}
+            selectedItems={selectedMember}
+            onSelectionChange={handleMemberChange}
+          />
+
           </div>
-          <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-sm">
-          {SEASONS.map((season) => (
-            <li key={season}>
-              <a onClick={() => handleDropdownSelect(season)}>{season}</a>
-            </li>
-          ))}
-          </ul>
-        </div>
         <ShowObjekts loading={loading} error={error} rowItems={rowItems}/>
       </div>
     </div>

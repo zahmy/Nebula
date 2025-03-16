@@ -86,8 +86,7 @@ services:
       - drizzle-proxy
       - processor    
     volumes:
-      - ./nebula:/app
-      - /app/node_modules
+      - ./nebula/src:/app/src
     environment:
       - WATCHPACK_POLLING=true
 volumes:

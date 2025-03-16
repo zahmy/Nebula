@@ -3,7 +3,7 @@ import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { Objekt } from './api_objekts';
 import './index.css';
 
-//顯示Objekts所需資料
+// 顯示Objekts所需資料
 interface ShowObjektsProps {
   loading: boolean;
   error: string | null;
@@ -13,23 +13,23 @@ interface ShowObjektsProps {
 function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
   const listRef = useRef<HTMLDivElement | null>(null);
 
-  //虛擬化：透過這些參數計算出目前視窗內應該要顯示哪幾列
+  // 虛擬化：透過這些參數計算出目前視窗內應該要顯示哪幾列
   const virtualizer = useWindowVirtualizer({
     count: rowItems.length,
-    //每個虛擬單位的預估高度（根據視窗寬度動態調整）
+    // 每個虛擬單位的預估高度（根據視窗寬度動態調整）
     estimateSize: () => {
       return window.innerWidth >= 1024 ? 300 : window.innerWidth >= 768 ? 280 : 260;
     },
-    //視窗範圍外，上下各渲染列數
+    // 視窗範圍外，上下各渲染列數
     overscan: 5,
-    //虛擬容器相對於視窗頂部的滾動偏移量，避免滾動誤判
+    // 虛擬容器相對於視窗頂部的滾動偏移量，避免滾動誤判
     scrollMargin: listRef.current?.offsetTop ?? 0,
   });
 
-  //一個陣列，存放目前視窗內的虛擬單元（多個Objekts列）
+  // 一個陣列，存放目前視窗內的虛擬單元（多個Objekts列）
   const items = virtualizer.getVirtualItems();
 
-  //Objekts正在載入或出現錯誤時顯示提示
+  // Objekts正在載入或出現錯誤時顯示提示
   if (loading || error) {
     return (
       <div className={loading ? 'text-gray-500' : 'text-red-500'}> 
