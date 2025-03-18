@@ -11,7 +11,7 @@ export interface ObjektByOwner {
   front_image: string;
 }
 
-export async function fetchObjekts(
+export async function fetchObjektsByOwner(
   ownerAddress: string,
   search: boolean,
   season: string[] = [],
@@ -36,10 +36,11 @@ export async function fetchObjekts(
   let paramIndex = 1;
 
   if (ownerAddress) {
-    sql += ` AND o.owner = $${paramIndex}`;
+    sql += " AND o.owner = $1";
     params.push(ownerAddress);
     paramIndex++;
   }
+
   if (season.length > 0) {
     const seasonPlaceholders = season
       .map((_, index) => `$${paramIndex + index}`)
@@ -48,6 +49,7 @@ export async function fetchObjekts(
     params.push(...season);
     paramIndex += season.length;
   }
+
   if (class_.length > 0) {
     const classPlaceholders = class_
       .map((_, index) => `$${paramIndex + index}`)
@@ -57,7 +59,6 @@ export async function fetchObjekts(
     paramIndex += class_.length;
   }
 
-  // 處理member過濾條件
   if (member.length > 0) {
     const mamberPlaceholders = member
       .map((_, index) => `$${paramIndex + index}`)
@@ -67,7 +68,6 @@ export async function fetchObjekts(
     paramIndex += member.length;
   }
 
-  // 處理collection過濾條件
   if (collection.length > 0) {
     const collectionPlaceholders = collection
       .map((_, index) => `$${paramIndex + index}`)
@@ -87,51 +87,61 @@ export async function fetchObjekts(
   };
 
   //console.log('送出的body:', JSON.stringify(requestBody));
+  try {
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "proxy-key": proxyKey,
+      },
+      body: JSON.stringify(requestBody),
+    });
 
-  const response = await fetch(proxyUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "proxy-key": proxyKey,
-    },
-    body: JSON.stringify(requestBody),
-  });
+    const text = await response.text();
+    console.log("收到回應:", text);
 
-  const text = await response.text();
-  console.log("收到回應:", text);
+    if (!response.ok) {
+      throw new Error(`無法拿到資料: ${response.status} - ${text}`);
+    }
 
-  if (!response.ok) {
-    throw new Error(`無法拿到資料: ${response.status} - ${text}`);
+    let data;
+    try {
+      data = JSON.parse(text) as [
+        string,
+        string,
+        string,
+        string,
+        string,
+        string,
+        string
+      ][];
+    } catch (parseError) {
+      console.error("Failed to parse response:", parseError, "Raw text:", text);
+      throw new Error("Invalid response format");
+    }
+    return data.map(
+      ([
+        season,
+        member,
+        class_,
+        collections,
+        serial,
+        received_at,
+        front_image,
+      ]) => ({
+        season,
+        member,
+        class_,
+        collections,
+        serial,
+        received_at,
+        front_image,
+      })
+    );
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error instanceof Error ? error : new Error("Unknown error occurred");
   }
-
-  const data = JSON.parse(text) as [
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string
-  ][];
-  return data.map(
-    ([
-      season,
-      member,
-      class_,
-      collections,
-      serial,
-      received_at,
-      front_image,
-    ]) => ({
-      season,
-      member,
-      class_,
-      collections,
-      serial,
-      received_at,
-      front_image,
-    })
-  );
 }
 
 export async function fetchAllCollections(): Promise<string[]> {
@@ -158,10 +168,9 @@ export async function fetchAllCollections(): Promise<string[]> {
   }
 
   const data = JSON.parse(text) as [string][];
-  return data.map(([collection]) => collection); // 返回去重複的 collection_no 陣列
+  return data.map(([collection]) => collection);
 }
 
-// api_objekts.ts
 export async function fetchUniqueSeasons(): Promise<string[]> {
   const sql =
     "SELECT DISTINCT season FROM collection WHERE artist = 'tripleS' ORDER BY season";

@@ -31,11 +31,6 @@ function FilterDropdown({
     if (!disabled) setMenuOpen(!menuOpen);
   };
 
-  const handleSelect = (item: string) => {
-    if (!disabled) onSelectionChange(item);
-    setMenuOpen(false);
-  };
-
   return (
     <div className="m-2">
       <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
