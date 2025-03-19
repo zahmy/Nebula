@@ -1,198 +1,185 @@
-import { useEffect, useRef, useState } from 'react';
-import { fetchObjekts } from './api_owner';
-import ShowObjekts from './ShowObjekts';
-import FilterDropdown from './DropdownFilter';
-import { Input } from './components/ui/input';
-import { Button } from './components/ui/button';
-import { fetchAllCollections, fetchUniqueSeasons, fetchUniqueClasses, fetchUniqueMembers } from './api_objekts';
-
-interface ObjektByOwner {
-  season: string;
-  member: string;
-  class_: string;
-  collection_no: string;
-  serial: string;
-  received_at: string;
-  front_image: string;
-}
+import ShowObjekts from "./ShowObjekts";
+import FilterDropdown from "./DropdownFilter";
+import Search from "./Search";
+import { fetchObjekts, Objekts_Owner } from "./api";
+import { Input } from "./components/ui/input";
+import { Button } from "./components/ui/button";
+import { DisplayObjekts } from "./DisplayObjekts";
 
 function ObjektsByOwner() {
-  const [objekts, setObjekts] = useState<ObjektByOwner[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [address, setAddress] = useState('');
-  const [selectedSeason, setSelectedSeason] = useState<string[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string[]>([]);
-  const [selectedMember, setSelectedMember] = useState<string[]>([]);  
-  const [columns, setColumns] = useState(getColumns());
-  const [collections, setCollections] = useState<string[]>([]);
-  const [seasons, setSeasons] = useState<string[]>([]);
-  const [classes, setClasses] = useState<string[]>([]);
-  const [members, setMembers] = useState<string[]>([]);
-
-  // 不同視窗寬度對應的Objekts顯示行數
-  function getColumns() {
-    if (window.innerWidth >= 1024) return 5; 
-    if (window.innerWidth >= 768) return 3;  
-    if (window.innerWidth >= 640) return 2;  
-    return 1;                                
-  }
-
-  // 隨著視窗寬度動態調整Objekts顯示行數
-  useEffect(() => {
-    const handleResize = () => {
-      const newColumns = getColumns();
-      setColumns(newColumns);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
-  // 全部Objekts所佔列數
-  const rows = Math.ceil(objekts.length / columns);
-
-  // 一個二維陣列，將Objekts以列為單位存放（因為渲染是一列一列的）
-  const rowItems = Array.from({ length: rows }, (_, rowIndex) =>
-    objekts.slice(rowIndex * columns, (rowIndex + 1) * columns)
-  );
-  
-  // 處理season篩選條件，只監聽season不監聽address，不然還沒按search結果就出來了 
-  const addressRef=useRef(address);
-
-  useEffect(() => {
-    addressRef.current = address;
-  }, [address]);
-
-  // 透過API取得Objekts
-  useEffect(() => {
-    const currentAddress = addressRef.current;
-    if (!currentAddress) {
-      return;
+  const wrappedFetchObjektsByOwner = (
+    search?: boolean,
+    season?: string[],
+    class_?: string[],
+    member?: string[],
+    collection?: string[],
+    artist?: string[],
+    owner?: string
+  ): Promise<Objekts_Owner[]> => {
+    if (!owner) {
+      return Promise.reject(
+        new Error("Address is required for ObjektsByOwner")
+      );
     }
-    setLoading(true);
-    setError(null);
-    fetchObjekts(currentAddress, selectedSeason, selectedClass, selectedMember)
-      .then((data) => {
-        setObjekts(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  },[selectedSeason, selectedClass, selectedMember]);
+    return fetchObjekts(
+      search || false,
+      season || [],
+      class_ || [],
+      member || [],
+      collection || [],
+      artist || [],
+      owner
+    );
+  };
 
-  // 另外處理搜尋按鈕
+  const {
+    loading,
+    error,
+    selectedSeasons,
+    selectedClasses,
+    selectedMembers,
+    selectedCollections,
+    selectedArtists,
+    collections,
+    seasons,
+    classes,
+    members,
+    artists,
+    disabledFilters,
+    rowItems,
+    handleSeasonsChange,
+    handleClassesChange,
+    handleMembersChange,
+    handleArtistsChange,
+    handleMatchesChange,
+    owner,
+    setOwner,
+    setLoading,
+    setError,
+    setObjekts,
+    searchQuery,
+    setSearchQuery,
+    resetFiltersAndSearch,
+  } = DisplayObjekts<Objekts_Owner>({
+    fetchFunction: wrappedFetchObjektsByOwner,
+    defaultOwner: "",
+  });
+
+  // 處理搜尋按鈕行為，之後討論要不要移除
   const handleFetchObjekts = () => {
-    if (!address) {
+    if (!owner) {
+      console.log("Address is empty, aborting fetch");
       return;
     }
+    console.log("Button clicked, fetching with address:", owner);
     setLoading(true);
     setError(null);
-    fetchObjekts(address, [])
+    fetchObjekts(
+      false,
+      selectedSeasons,
+      selectedClasses,
+      selectedMembers,
+      selectedCollections,
+      selectedArtists,
+      owner
+    )
       .then((data) => {
-        setObjekts(data);
+        console.log("Button fetch result:", data);
+        setObjekts(
+          data.filter(
+            (obj): obj is Objekts_Owner =>
+              "minted_at" in obj &&
+              "received_at" in obj &&
+              "serial" in obj &&
+              "transferable" in obj
+          )
+        );
         setLoading(false);
       })
       .catch((err) => {
+        console.log("Button fetch error:", err.message);
         setError(err.message);
         setLoading(false);
         setObjekts([]);
       });
   };
 
-  const remind = !address.length ? 'Please enter an address to search' : '';
-
-  const toggleSelection = <T extends string>(prev: T[], value: T): T[] =>
-    value
-      ? prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value]
-      : [];
-
-  const handleSeasonChange = (season: string) => {
-    setSelectedSeason((prevSelectedSeasons) => toggleSelection(prevSelectedSeasons, season));
-  };
-
-  const handleClassChange = (class_: string) => {
-    setSelectedClass((prevSelectedClasses) => toggleSelection(prevSelectedClasses, class_));
-  };
-
-  const handleMemberChange = (member: string) => {
-    setSelectedMember((prevSelectedMembers) => toggleSelection(prevSelectedMembers, member));
-  };
-
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetchAllCollections(),
-      fetchUniqueSeasons(),
-      fetchUniqueClasses(),
-      fetchUniqueMembers(),
-    ])
-      .then(([collectionNosData, seasonsData, classesData, membersData]) => {
-        setCollections(collectionNosData);
-        setSeasons(seasonsData);
-        setClasses(classesData);
-        setMembers(membersData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching data:", err);
-        setError("Failed to load data");
-        setLoading(false);
-      });
-  }, []);
+  const remind = !owner.length ? "Please enter an address to search" : "";
 
   return (
     <div>
-      <div className="flex items-center mt-5">
-        <Input
-          type="text"
-          value={address}
-          className="w-50 mr-2"
-          onChange={(e) => setAddress(e.target.value.toLowerCase())}
-          placeholder="Enter an address"
-        />
-        <Button
-          onClick={handleFetchObjekts}
-          disabled={loading}
-          className="bg-accent text-white hover:bg-accent/90 mr-5"
-        >
-          {loading ? 'Loading...' : 'Search'}
-        </Button>
-      </div>  
-
-      {remind}
-
       <div className="min-h-screen">
-        <div className='flex'>
-          {/* Season選單 */}  
+        <div className="flex items-center ml-5 mt-2">
+          {/* 搜尋 */}
+          <Search
+            members={members}
+            seasons={seasons}
+            collections={collections}
+            selectedMembers={selectedMembers}
+            selectedSeasons={selectedSeasons}
+            selectedClasses={selectedClasses}
+            selectedCollections={selectedCollections}
+            onMatchesChange={handleMatchesChange}
+            onReset={resetFiltersAndSearch}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          ></Search>
+
+          {/* Artist選單 */}
+          <FilterDropdown
+            label="Artist"
+            items={artists}
+            selectedItems={selectedArtists}
+            onSelectionChange={handleArtistsChange}
+            disabled={false}
+          />
+
+          {/* Season選單 */}
           <FilterDropdown
             label="Season"
             items={seasons}
-            selectedItems={selectedSeason}
-            onSelectionChange={handleSeasonChange}
+            selectedItems={selectedSeasons}
+            onSelectionChange={handleSeasonsChange}
+            disabled={disabledFilters.seasons}
           />
 
           {/* Class選單 */}
           <FilterDropdown
             label="Class"
             items={classes}
-            selectedItems={selectedClass}
-            onSelectionChange={handleClassChange}
+            selectedItems={selectedClasses}
+            onSelectionChange={handleClassesChange}
+            disabled={disabledFilters.classes}
           />
 
           {/* Member選單 */}
           <FilterDropdown
-            label="Memeber"
+            label="Member"
             items={members}
-            selectedItems={selectedMember}
-            onSelectionChange={handleMemberChange}
+            selectedItems={selectedMembers}
+            onSelectionChange={handleMembersChange}
+            disabled={disabledFilters.members}
           />
 
-          </div>
-        <ShowObjekts loading={loading} error={error} rowItems={rowItems}/>
+          <Input
+            type="text"
+            value={owner}
+            className="w-50 mr-2"
+            onChange={(e) => setOwner(e.target.value.toLowerCase())}
+            placeholder="Enter an address"
+          />
+
+          <Button
+            onClick={handleFetchObjekts}
+            disabled={loading}
+            className="bg-accent text-white hover:bg-accent/90 mr-5"
+          >
+            {loading ? "Loading..." : "Search"}
+          </Button>
+
+          {remind}
+        </div>
+        <ShowObjekts loading={loading} error={error} rowItems={rowItems} />
       </div>
     </div>
   );

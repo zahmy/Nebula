@@ -1,135 +1,90 @@
-import { useState, useEffect } from 'react';
-import ShowObjekts from './ShowObjekts';
-import { fetchAllCollections, fetchObjekts, fetchUniqueClasses, fetchUniqueMembers, fetchUniqueSeasons, Objekt } from './api_objekts';
-import FilterDropdown from './DropdownFilter';
+import ShowObjekts from "./ShowObjekts";
+import FilterDropdown from "./DropdownFilter";
+import Search from "./Search";
+import { fetchObjekts, Objekts_ } from "./api";
+import { DisplayObjekts } from "./DisplayObjekts";
 
 function Objekts() {
-  const [objekts, setObjekts] = useState<Objekt[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedSeason, setSelectedSeason] = useState<string[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string[]>([]);
-  const [selectedMember, setSelectedMember] = useState<string[]>([]);
-  const [selectedCollection, setSelectedCollection] = useState<string[]>([]);
-  const [columns, setColumns] = useState(getColumns());
-  const [collections, setCollections] = useState<string[]>([]);
-  const [seasons, setSeasons] = useState<string[]>([]);
-  const [classes, setClasses] = useState<string[]>([]);
-  const [members, setMembers] = useState<string[]>([]);
-
-  // 不同視窗寬度對應的Objekts顯示行數
-  function getColumns() {
-    if (window.innerWidth >= 1024) return 5; 
-    if (window.innerWidth >= 768) return 3;  
-    if (window.innerWidth >= 640) return 2;  
-    return 1;                                
-  }
-
-  // 隨著視窗寬度動態調整Objekts顯示行數
-  useEffect(() => {
-    const handleResize = () => {
-      const newColumns = getColumns();
-      setColumns(newColumns);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-  
-  // 全部Objekts所佔列數
-  const rows = Math.ceil(objekts.length / columns);
-
-  // 一個二維陣列，將Objekts以列為單位存放（因為渲染是一列一列的）
-  const rowItems = Array.from({ length: rows }, (_, rowIndex) =>
-    objekts.slice(rowIndex * columns, (rowIndex + 1) * columns)
-  );
-  
-// 透過API取得Objekts
-useEffect(() => {
-  setLoading(true);
-  fetchObjekts(selectedSeason, selectedClass, selectedMember, selectedCollection)
-    .then((data) => {
-      setObjekts(data);
-      setLoading(false);
-    })
-    .catch((err) => {
-      setError(err.message);
-      setLoading(false);
-    });
-}, [selectedSeason, selectedClass, selectedMember, selectedCollection]);
-
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      fetchAllCollections(),
-      fetchUniqueSeasons(),
-      fetchUniqueClasses(),
-      fetchUniqueMembers(),
-    ])
-      .then(([collectionNosData, seasonsData, classesData, membersData]) => {
-        setCollections(collectionNosData);
-        setSeasons(seasonsData);
-        setClasses(classesData);
-        setMembers(membersData);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching data:", err);
-        setError("Failed to load data");
-        setLoading(false);
-      });
-  }, []);
-
-  const toggleSelection = <T extends string>(prev: T[], value: T): T[] =>
-    value
-      ? prev.includes(value)
-        ? prev.filter((item) => item !== value)
-        : [...prev, value]
-      : [];
-
-  const handleSeasonChange = (season: string) => {
-    setSelectedSeason((prevSelectedSeasons) => toggleSelection(prevSelectedSeasons, season));
-  };
-
-  const handleClassChange = (class_: string) => {
-    setSelectedClass((prevSelectedClasses) => toggleSelection(prevSelectedClasses, class_));
-  };
-
-  const handleMemberChange = (member: string) => {
-    setSelectedMember((prevSelectedMembers) => toggleSelection(prevSelectedMembers, member));
-  };
+  const {
+    loading,
+    error,
+    selectedSeasons,
+    selectedClasses,
+    selectedMembers,
+    selectedCollections,
+    selectedArtists,
+    collections,
+    seasons,
+    classes,
+    members,
+    artists,
+    disabledFilters,
+    rowItems,
+    handleSeasonsChange,
+    handleClassesChange,
+    handleMembersChange,
+    handleMatchesChange,
+    handleArtistsChange,
+    searchQuery,
+    setSearchQuery,
+    resetFiltersAndSearch,
+  } = DisplayObjekts<Objekts_>({ fetchFunction: fetchObjekts });
 
   return (
     <div className="min-h-screen">
-      <div className='flex items-center ml-5 mt-2'>
+      <div className="flex items-center ml-5 mt-2">
+        {/* 搜尋 */}
+        <Search
+          members={members}
+          seasons={seasons}
+          collections={collections}
+          selectedMembers={selectedMembers}
+          selectedSeasons={selectedSeasons}
+          selectedClasses={selectedClasses}
+          selectedCollections={selectedCollections}
+          onMatchesChange={handleMatchesChange}
+          onReset={resetFiltersAndSearch}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
 
-        {/* Season選單 */}  
+        {/* Artist選單 */}
+        <FilterDropdown
+          label="Artist"
+          items={artists}
+          selectedItems={selectedArtists}
+          onSelectionChange={handleArtistsChange}
+          disabled={false}
+        />
+
+        {/* Season選單 */}
         <FilterDropdown
           label="Season"
           items={seasons}
-          selectedItems={selectedSeason}
-          onSelectionChange={handleSeasonChange}
+          selectedItems={selectedSeasons}
+          onSelectionChange={handleSeasonsChange}
+          disabled={disabledFilters.seasons}
         />
 
         {/* Class選單 */}
         <FilterDropdown
           label="Class"
           items={classes}
-          selectedItems={selectedClass}
-          onSelectionChange={handleClassChange}
+          selectedItems={selectedClasses}
+          onSelectionChange={handleClassesChange}
+          disabled={disabledFilters.classes}
         />
 
         {/* Member選單 */}
         <FilterDropdown
-          label="Memeber"
+          label="Member"
           items={members}
-          selectedItems={selectedMember}
-          onSelectionChange={handleMemberChange}
+          selectedItems={selectedMembers}
+          onSelectionChange={handleMembersChange}
+          disabled={disabledFilters.members}
         />
-
       </div>
-
-      <ShowObjekts loading={loading} error={error} rowItems={rowItems}/>
-
+      <ShowObjekts loading={loading} error={error} rowItems={rowItems} />
     </div>
   );
 }

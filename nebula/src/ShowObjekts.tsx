@@ -1,13 +1,13 @@
-import { useRef } from 'react';
-import { useWindowVirtualizer } from '@tanstack/react-virtual';
-import { Objekt } from './api_objekts';
-import './index.css';
+import { useRef } from "react";
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
+import { Objekts_ } from "./api";
+import "./index.css";
 
 // 顯示Objekts所需資料
 interface ShowObjektsProps {
   loading: boolean;
   error: string | null;
-  rowItems: Objekt[][];
+  rowItems: Objekts_[][];
 }
 
 function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
@@ -18,7 +18,11 @@ function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
     count: rowItems.length,
     // 每個虛擬單位的預估高度（根據視窗寬度動態調整）
     estimateSize: () => {
-      return window.innerWidth >= 1024 ? 300 : window.innerWidth >= 768 ? 280 : 260;
+      return window.innerWidth >= 1024
+        ? 300
+        : window.innerWidth >= 768
+        ? 280
+        : 260;
     },
     // 視窗範圍外，上下各渲染列數
     overscan: 5,
@@ -32,16 +36,32 @@ function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
   // Objekts正在載入或出現錯誤時顯示提示
   if (loading || error) {
     return (
-      <div className={loading ? 'text-gray-500' : 'text-red-500'}> 
-        {loading ? 'Loading...' : `Error: ${error}`}
+      <div className={loading ? "text-gray-500" : "text-red-500"}>
+        {loading ? "Loading..." : `Error: ${error}`}
       </div>
     );
   }
 
   return (
     <div ref={listRef} className="relative">
-      <div style={{ height: `${virtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${items[0]?.start - virtualizer.options.scrollMargin}px)` }}>
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            transform: `translateY(${
+              items[0]?.start - virtualizer.options.scrollMargin
+            }px)`,
+          }}
+        >
           {items.map((virtualRow) => (
             <div
               key={virtualRow.key}
@@ -55,7 +75,7 @@ function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
                   className="m-2 min-w-[150px] text-center"
                 >
                   <div className="mb-2">
-                    {obj.season} {obj.member} {obj.collection_no} {obj.class_}
+                    {obj.season} {obj.member} {obj.collection_no} {obj.class}
                   </div>
                   <img
                     src={obj.front_image}
