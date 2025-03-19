@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { Button } from "./components/ui/button";
 import { Input } from "./components/ui/input";
 
@@ -10,6 +10,9 @@ interface SearchProps {
   selectedSeasons: string[];
   selectedClasses: string[];
   selectedCollections: string[];
+  searchQuery: string;
+  setSearchQuery: (value: string) => void;
+  onReset: () => void;
   onMatchesChange: (matches: {
     search: boolean;
     members: string[];
@@ -28,8 +31,10 @@ function Search({
   seasons,
   collections,
   onMatchesChange,
+  searchQuery,
+  setSearchQuery,
+  onReset,
 }: SearchProps) {
-  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // 定義season縮寫
   const seasonMapping: { [key: string]: string } = {
@@ -223,10 +228,10 @@ function Search({
       ></Input>
 
       <Button
-        onClick={() => setSearchQuery("")}
-        className="text-gray-500 hover:text-gray-700"
+        onClick={() => onReset()}
+        className=""
       >
-        ✕
+        RESET
       </Button>
     </div>
   );

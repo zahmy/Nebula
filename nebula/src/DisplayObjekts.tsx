@@ -35,12 +35,13 @@ interface UseObjektsDataOptions<T> {
     class_: string[],
     member: string[],
     collection: string[],
+    artist: string[],
     owner?: string
   ) => Promise<T[]>;
   defaultOwner?: string;
 }
 
-export function UseObjektsData<T extends ObjektType>({
+export function DisplayObjekts<T extends ObjektType>({
   fetchFunction,
   defaultOwner = "",
 }: UseObjektsDataOptions<T>) {
@@ -51,11 +52,13 @@ export function UseObjektsData<T extends ObjektType>({
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
+  const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
   const [columns, setColumns] = useState(getColumns());
   const [collections, setCollections] = useState<string[]>([]);
   const [seasons, setSeasons] = useState<string[]>([]);
   const [classes, setClasses] = useState<string[]>([]);
   const [members, setMembers] = useState<string[]>([]);
+  const [artists, setArtists] = useState<string[]>([]);
   const [searchFilters, setSearchFilters] = useState<FilterOptions>({
     members: [],
     seasons: [],
@@ -64,6 +67,7 @@ export function UseObjektsData<T extends ObjektType>({
   const [search, setSearch] = useState<boolean>(false);
   const [disabledFilters, setDisabledFilters] = useState<DisabledFilters>({});
   const [owner, setOwner] = useState<string>(defaultOwner);
+  const[searchQuery, setSearchQuery] = useState<string>("");
   console.log("Initial owner:", defaultOwner);
 
   // 不同視窗寬度對應的Objekts顯示行數
@@ -106,23 +110,27 @@ export function UseObjektsData<T extends ObjektType>({
       search && searchFilters.collections.length > 0
         ? searchFilters.collections
         : selectedCollections;
+    const finalArtists = selectedArtists;
+ 
     return {
       seasons: finalSeasons,
       classes: selectedClasses,
       members: finalMembers,
       collections: finalCollections,
+      artists: finalArtists,
     };
   };
 
   // 透過API取得Objekts
   useEffect(() => {
-    const { seasons, classes, members, collections } = getFinalFilters();
+    const { seasons, classes, members, collections, artists } = getFinalFilters();
     console.log("useEffect被觸發:", {
       search,
       seasons,
       classes,
       members,
       collections,
+      artists,
       owner,
     });
     setLoading(true);
@@ -132,6 +140,7 @@ export function UseObjektsData<T extends ObjektType>({
       classes,
       members,
       collections,
+      artists,
       owner || undefined
     )
       .then((data) => {
@@ -165,6 +174,7 @@ export function UseObjektsData<T extends ObjektType>({
     selectedClasses,
     selectedMembers,
     selectedCollections,
+    selectedArtists,
     searchFilters.members,
     searchFilters.seasons,
     searchFilters.collections,
@@ -213,6 +223,10 @@ export function UseObjektsData<T extends ObjektType>({
           "SeoAh",
           "JiYeon",
         ]);
+        setArtists([
+          "tripleS",
+          "artms",
+        ])
         setLoading(false);
       })
       .catch((err) => {
@@ -247,6 +261,12 @@ export function UseObjektsData<T extends ObjektType>({
     );
   };
 
+  const handleArtistsChange = (artist: string) => {
+    setSelectedArtists((prevSelectedArtists) =>
+      toggleSelection(prevSelectedArtists, artist)
+    );
+  };
+
   const handleMatchesChange = useCallback((matches: Matches) => {
     // 僅更新搜尋框的searchFilters，不影響選單的selected狀態
     setSearchFilters({
@@ -257,6 +277,23 @@ export function UseObjektsData<T extends ObjektType>({
     setSearch(matches.search);
     setDisabledFilters(matches.disabledFilters || {});
   }, []);
+
+  const resetFiltersAndSearch = useCallback(() => {
+    setSearchQuery("");
+    setSelectedSeasons([]);
+    setSelectedClasses([]);
+    setSelectedMembers([]);
+    setSelectedCollections([]);
+    setSelectedArtists([]);
+    setSearchFilters({
+      members: [],
+      seasons: [],
+      collections: [],
+    });
+    setSearch(false);
+    setDisabledFilters({});
+  }, []);
+  
 
   return {
     objekts,
@@ -273,11 +310,14 @@ export function UseObjektsData<T extends ObjektType>({
     setSelectedMembers,
     selectedCollections,
     setSelectedCollections,
+    selectedArtists,
+    setSelectedArtists,
     columns,
     collections,
     seasons,
     classes,
     members,
+    artists,
     searchFilters,
     search,
     disabledFilters,
@@ -286,7 +326,11 @@ export function UseObjektsData<T extends ObjektType>({
     handleClassesChange,
     handleMembersChange,
     handleMatchesChange,
+    handleArtistsChange,
     owner,
     setOwner,
+    searchQuery,
+    setSearchQuery,
+    resetFiltersAndSearch,
   };
 }

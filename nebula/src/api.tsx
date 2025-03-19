@@ -69,6 +69,7 @@ export async function fetchObjekts<T extends Objekts_ | Objekts_Owner>(
   class_: string[] = [],
   member: string[] = [],
   collection: string[] = [],
+  artist: string[] = [],
   owner?: string
 ): Promise<T[]> {
   if (
@@ -76,7 +77,8 @@ export async function fetchObjekts<T extends Objekts_ | Objekts_Owner>(
     season.length === 0 &&
     class_.length === 0 &&
     member.length === 0 &&
-    collection.length === 0
+    collection.length === 0 &&
+    artist.length === 0
   ) {
     console.log("No search filters provided, returning empty result.");
     return [];
@@ -134,6 +136,16 @@ export async function fetchObjekts<T extends Objekts_ | Objekts_Owner>(
     params.push(...collection);
     paramIndex += collection.length;
   }
+
+    // 處理artist過濾條件
+    if (artist.length > 0) {
+      const artistPlaceholders = artist
+        .map((_, index) => `$${paramIndex + index}`)
+        .join(", ");
+      sql += ` AND c.artist IN (${artistPlaceholders})`;
+      params.push(...artist);
+      paramIndex += artist.length;
+    }
 
   // 處理owner過濾條件
   if (owner) {

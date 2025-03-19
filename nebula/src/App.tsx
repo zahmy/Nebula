@@ -16,7 +16,7 @@ function App() {
     <div>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <TooltipProvider>
-          <nav className='flex justify-between items-center bg-blue-950/30 backdrop-blur-lg p-5 shadow-lg fixed top-0 left-0 right-0 z-50'>
+          <nav className='flex justify-between items-center border-b border-indigo-400/40 bg-linear-to-r/increasing from-indigo-400/60 via-teal-400/30 to-purple-400/60 backdrop-blur-lg p-5 shadow-lg fixed top-0 left-0 right-0 z-50'>
             <h1 className="text-4xl font-bold">Nebula</h1>
               <div className="flex space-x-10">
                 

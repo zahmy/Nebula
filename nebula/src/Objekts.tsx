@@ -2,7 +2,7 @@ import ShowObjekts from "./ShowObjekts";
 import FilterDropdown from "./DropdownFilter";
 import Search from "./Search";
 import { fetchObjekts, Objekts_ } from "./api";
-import { UseObjektsData } from "./UseObjektsData";
+import { DisplayObjekts } from "./DisplayObjekts";
 
 function Objekts() {
   const {
@@ -12,17 +12,23 @@ function Objekts() {
     selectedClasses,
     selectedMembers,
     selectedCollections,
+    selectedArtists,
     collections,
     seasons,
     classes,
     members,
+    artists,
     disabledFilters,
     rowItems,
     handleSeasonsChange,
     handleClassesChange,
     handleMembersChange,
     handleMatchesChange,
-  } = UseObjektsData<Objekts_>({ fetchFunction: fetchObjekts });
+    handleArtistsChange,
+    searchQuery,
+    setSearchQuery,
+    resetFiltersAndSearch,
+  } = DisplayObjekts<Objekts_>({ fetchFunction: fetchObjekts });
 
   return (
     <div className="min-h-screen">
@@ -37,6 +43,18 @@ function Objekts() {
           selectedClasses={selectedClasses}
           selectedCollections={selectedCollections}
           onMatchesChange={handleMatchesChange}
+          onReset={resetFiltersAndSearch}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+
+        {/* Artist選單 */}
+        <FilterDropdown
+          label="Artist"
+          items={artists}
+          selectedItems={selectedArtists}
+          onSelectionChange={handleArtistsChange}
+          disabled={false}
         />
 
         {/* Season選單 */}

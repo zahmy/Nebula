@@ -4,7 +4,7 @@ import Search from "./Search";
 import { fetchObjekts, Objekts_Owner } from "./api";
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
-import { UseObjektsData } from "./UseObjektsData";
+import { DisplayObjekts } from "./DisplayObjekts";
 
 function ObjektsByOwner() {
   const wrappedFetchObjektsByOwner = (
@@ -13,6 +13,7 @@ function ObjektsByOwner() {
     class_?: string[],
     member?: string[],
     collection?: string[],
+    artist?: string[],
     owner?: string
   ): Promise<Objekts_Owner[]> => {
     if (!owner) {
@@ -26,6 +27,7 @@ function ObjektsByOwner() {
       class_ || [],
       member || [],
       collection || [],
+      artist || [],
       owner
     );
   };
@@ -37,22 +39,28 @@ function ObjektsByOwner() {
     selectedClasses,
     selectedMembers,
     selectedCollections,
+    selectedArtists,
     collections,
     seasons,
     classes,
     members,
+    artists,
     disabledFilters,
     rowItems,
     handleSeasonsChange,
     handleClassesChange,
     handleMembersChange,
+    handleArtistsChange,
     handleMatchesChange,
     owner,
     setOwner,
     setLoading,
     setError,
     setObjekts,
-  } = UseObjektsData<Objekts_Owner>({
+    searchQuery,
+    setSearchQuery,
+    resetFiltersAndSearch,
+  } = DisplayObjekts<Objekts_Owner>({
     fetchFunction: wrappedFetchObjektsByOwner,
     defaultOwner: "",
   });
@@ -72,6 +80,7 @@ function ObjektsByOwner() {
       selectedClasses,
       selectedMembers,
       selectedCollections,
+      selectedArtists,
       owner
     )
       .then((data) => {
@@ -111,7 +120,19 @@ function ObjektsByOwner() {
             selectedClasses={selectedClasses}
             selectedCollections={selectedCollections}
             onMatchesChange={handleMatchesChange}
+            onReset={resetFiltersAndSearch}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
           ></Search>
+
+          {/* Artist選單 */}
+          <FilterDropdown
+            label="Artist"
+            items={artists}
+            selectedItems={selectedArtists}
+            onSelectionChange={handleArtistsChange}
+            disabled={false}
+          />
 
           {/* Season選單 */}
           <FilterDropdown
