@@ -3,6 +3,8 @@ FROM oven/bun
 WORKDIR /usr/src/app
 
 COPY package.json ./
+# Install Python and build tools needed for native dependencies
+RUN apt-get update && apt-get install -y python3 make g++ && apt-get clean
 RUN bun install
 COPY . .
 
