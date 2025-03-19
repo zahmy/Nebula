@@ -1,13 +1,13 @@
 import { useRef } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { Objekt } from "./api_objekts";
+import { Objekts_ } from "./api";
 import "./index.css";
 
 // 顯示Objekts所需資料
 interface ShowObjektsProps {
   loading: boolean;
   error: string | null;
-  rowItems: Objekt[][];
+  rowItems: Objekts_[][];
 }
 
 function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
@@ -75,7 +75,7 @@ function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
                   className="m-2 min-w-[150px] text-center"
                 >
                   <div className="mb-2">
-                    {obj.season} {obj.member} {obj.collections} {obj.class_}
+                    {obj.season} {obj.member} {obj.collection_no} {obj.class}
                   </div>
                   <img
                     src={obj.front_image}

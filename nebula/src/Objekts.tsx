@@ -1,7 +1,7 @@
 import ShowObjekts from "./ShowObjekts";
 import FilterDropdown from "./DropdownFilter";
 import Search from "./Search";
-import { fetchObjekts, Objekt } from "./api_objekts";
+import { fetchObjekts, Objekts_ } from "./api";
 import { UseObjektsData } from "./UseObjektsData";
 
 function Objekts() {
@@ -22,7 +22,7 @@ function Objekts() {
     handleClassesChange,
     handleMembersChange,
     handleMatchesChange,
-  } = UseObjektsData<Objekt>({ fetchFunction: fetchObjekts });
+  } = UseObjektsData<Objekts_>({ fetchFunction: fetchObjekts });
 
   return (
     <div className="min-h-screen">

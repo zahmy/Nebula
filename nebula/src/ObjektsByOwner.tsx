@@ -1,32 +1,32 @@
 import ShowObjekts from "./ShowObjekts";
 import FilterDropdown from "./DropdownFilter";
 import Search from "./Search";
-import { fetchObjektsByOwner, ObjektByOwner } from "./api_owner";
+import { fetchObjekts, Objekts_Owner } from "./api";
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
 import { UseObjektsData } from "./UseObjektsData";
 
 function ObjektsByOwner() {
   const wrappedFetchObjektsByOwner = (
-    search: boolean,
-    season: string[],
-    class_: string[],
-    member: string[],
-    collection: string[],
-    address?: string
-  ): Promise<ObjektByOwner[]> => {
-    if (!address) {
+    search?: boolean,
+    season?: string[],
+    class_?: string[],
+    member?: string[],
+    collection?: string[],
+    owner?: string
+  ): Promise<Objekts_Owner[]> => {
+    if (!owner) {
       return Promise.reject(
         new Error("Address is required for ObjektsByOwner")
       );
     }
-    return fetchObjektsByOwner(
-      address,
-      search,
-      season,
-      class_,
-      member,
-      collection
+    return fetchObjekts(
+      search || false,
+      season || [],
+      class_ || [],
+      member || [],
+      collection || [],
+      owner
     );
   };
 
@@ -47,36 +47,44 @@ function ObjektsByOwner() {
     handleClassesChange,
     handleMembersChange,
     handleMatchesChange,
-    address,
-    setAddress,
+    owner,
+    setOwner,
     setLoading,
     setError,
     setObjekts,
-  } = UseObjektsData<ObjektByOwner>({
+  } = UseObjektsData<Objekts_Owner>({
     fetchFunction: wrappedFetchObjektsByOwner,
-    defaultAddress: "",
+    defaultOwner: "",
   });
 
-  // 處理搜尋按鈕行為，之後討論要不要保留
+  // 處理搜尋按鈕行為，之後討論要不要移除
   const handleFetchObjekts = () => {
-    if (!address) {
+    if (!owner) {
       console.log("Address is empty, aborting fetch");
       return;
     }
-    console.log("Button clicked, fetching with address:", address);
+    console.log("Button clicked, fetching with address:", owner);
     setLoading(true);
     setError(null);
-    fetchObjektsByOwner(
-      address,
+    fetchObjekts(
       false,
       selectedSeasons,
       selectedClasses,
       selectedMembers,
-      selectedCollections
+      selectedCollections,
+      owner
     )
       .then((data) => {
         console.log("Button fetch result:", data);
-        setObjekts(data);
+        setObjekts(
+          data.filter(
+            (obj): obj is Objekts_Owner =>
+              "minted_at" in obj &&
+              "received_at" in obj &&
+              "serial" in obj &&
+              "transferable" in obj
+          )
+        );
         setLoading(false);
       })
       .catch((err) => {
@@ -87,29 +95,10 @@ function ObjektsByOwner() {
       });
   };
 
-  const remind = !address.length ? "Please enter an address to search" : "";
+  const remind = !owner.length ? "Please enter an address to search" : "";
 
   return (
     <div>
-      <div className="flex items-center mt-5">
-        <Input
-          type="text"
-          value={address}
-          className="w-50 mr-2"
-          onChange={(e) => setAddress(e.target.value.toLowerCase())}
-          placeholder="Enter an address"
-        />
-        <Button
-          onClick={handleFetchObjekts}
-          disabled={loading}
-          className="bg-accent text-white hover:bg-accent/90 mr-5"
-        >
-          {loading ? "Loading..." : "Search"}
-        </Button>
-      </div>
-
-      {remind}
-
       <div className="min-h-screen">
         <div className="flex items-center ml-5 mt-2">
           {/* 搜尋 */}
@@ -144,12 +133,30 @@ function ObjektsByOwner() {
 
           {/* Member選單 */}
           <FilterDropdown
-            label="Memeber"
+            label="Member"
             items={members}
             selectedItems={selectedMembers}
             onSelectionChange={handleMembersChange}
             disabled={disabledFilters.members}
           />
+
+          <Input
+            type="text"
+            value={owner}
+            className="w-50 mr-2"
+            onChange={(e) => setOwner(e.target.value.toLowerCase())}
+            placeholder="Enter an address"
+          />
+
+          <Button
+            onClick={handleFetchObjekts}
+            disabled={loading}
+            className="bg-accent text-white hover:bg-accent/90 mr-5"
+          >
+            {loading ? "Loading..." : "Search"}
+          </Button>
+
+          {remind}
         </div>
         <ShowObjekts loading={loading} error={error} rowItems={rowItems} />
       </div>

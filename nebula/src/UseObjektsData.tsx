@@ -1,8 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchAllCollections, fetchUniqueSeasons, Objekt } from "./api_objekts";
-import { ObjektByOwner } from "./api_owner";
+import {
+  fetchAllCollections,
+  fetchUniqueSeasons,
+  Objekts_,
+  Objekts_Owner,
+} from "./api";
 
-type ObjektType = Objekt | ObjektByOwner;
+type ObjektType = Objekts_ | Objekts_Owner;
 
 interface FilterOptions {
   members: string[];
@@ -31,14 +35,14 @@ interface UseObjektsDataOptions<T> {
     class_: string[],
     member: string[],
     collection: string[],
-    address?: string
+    owner?: string
   ) => Promise<T[]>;
-  defaultAddress?: string;
+  defaultOwner?: string;
 }
 
 export function UseObjektsData<T extends ObjektType>({
   fetchFunction,
-  defaultAddress = "",
+  defaultOwner = "",
 }: UseObjektsDataOptions<T>) {
   const [objekts, setObjekts] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,7 +63,8 @@ export function UseObjektsData<T extends ObjektType>({
   });
   const [search, setSearch] = useState<boolean>(false);
   const [disabledFilters, setDisabledFilters] = useState<DisabledFilters>({});
-  const [address, setAddress] = useState<string>(defaultAddress);
+  const [owner, setOwner] = useState<string>(defaultOwner);
+  console.log("Initial owner:", defaultOwner);
 
   // 不同視窗寬度對應的Objekts顯示行數
   function getColumns() {
@@ -112,10 +117,24 @@ export function UseObjektsData<T extends ObjektType>({
   // 透過API取得Objekts
   useEffect(() => {
     const { seasons, classes, members, collections } = getFinalFilters();
+    console.log("useEffect被觸發:", {
+      search,
+      seasons,
+      classes,
+      members,
+      collections,
+      owner,
+    });
     setLoading(true);
-    fetchFunction(search, seasons, classes, members, collections, address)
+    fetchFunction(
+      search,
+      seasons,
+      classes,
+      members,
+      collections,
+      owner || undefined
+    )
       .then((data) => {
-        // 按照成員關聯性排序Objekts
         if (search && searchFilters.members.length > 0) {
           const memberOrder = new Map(
             searchFilters.members.map((member, index) => [
@@ -125,13 +144,15 @@ export function UseObjektsData<T extends ObjektType>({
           );
           data.sort((a, b) => {
             const aIndex =
-              memberOrder.get((a as Objekt).member.toLowerCase()) ?? Infinity;
+              memberOrder.get((a as ObjektType).member.toLowerCase()) ??
+              Infinity;
             const bIndex =
-              memberOrder.get((b as Objekt).member.toLowerCase()) ?? Infinity;
+              memberOrder.get((b as ObjektType).member.toLowerCase()) ??
+              Infinity;
             return aIndex - bIndex;
           });
         }
-
+        console.log("Data received:", data);
         setObjekts(data);
         setLoading(false);
       })
@@ -148,7 +169,7 @@ export function UseObjektsData<T extends ObjektType>({
     searchFilters.seasons,
     searchFilters.collections,
     search,
-    address,
+    owner,
   ]);
 
   // 設定seasons、classes、members
@@ -265,7 +286,7 @@ export function UseObjektsData<T extends ObjektType>({
     handleClassesChange,
     handleMembersChange,
     handleMatchesChange,
-    address,
-    setAddress,
+    owner,
+    setOwner,
   };
 }
