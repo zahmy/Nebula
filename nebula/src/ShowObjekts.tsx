@@ -1,13 +1,14 @@
 import { useRef } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { Objekts_ } from "./api";
+import { Objekts_Owner } from "./api";
 import "./index.css";
+import { ObjektsSidebar } from "./ObjektsSidebar";
 
 // 顯示Objekts所需資料
 interface ShowObjektsProps {
   loading: boolean;
   error: string | null;
-  rowItems: Objekts_[][];
+  rowItems: Objekts_Owner[][];
 }
 
 function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
@@ -72,16 +73,19 @@ function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
               {rowItems[virtualRow.index].map((obj, idx) => (
                 <div
                   key={`${virtualRow.index}-${idx}`}
-                  className="m-2 min-w-[150px] text-center"
+                  className="m-2 w-[280px] text-center relative"
                 >
-                  <div className="mb-2">
-                    {obj.season} {obj.member} {obj.collection_no} {obj.class}
-                  </div>
                   <img
                     src={obj.front_image}
                     alt="front_image"
                     className="w-full max-w-[220px] mx-auto"
                     loading="lazy"
+                  />
+
+                  <ObjektsSidebar
+                    collection={obj.collection_no}
+                    serial={Number(obj.serial)}
+                    text_color={obj.text_color}
                   />
                 </div>
               ))}

@@ -16,14 +16,14 @@ function App() {
     <div>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <TooltipProvider>
-          <nav className='flex justify-between items-center border-b border-indigo-400/40 bg-linear-to-r/increasing from-indigo-400/60 via-teal-400/30 to-purple-400/60 backdrop-blur-lg p-5 shadow-lg fixed top-0 left-0 right-0 z-50'>
-            <h1 className="text-4xl font-bold">Nebula</h1>
+          <nav className='flex justify-between items-center border-b border-indigo-400/40 bg-linear-to-r/increasing from-indigo-400/30 via-teal-400/40 to-purple-400/30 backdrop-blur-lg p-3 shadow-lg fixed top-0 left-0 right-0 z-50'>
+            <h1 className="text-3xl ml-3 font-bold">Nebula</h1>
               <div className="flex space-x-10">
                 
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link to="/">
-                      <Icon icon="streamline:cards" width={40} height={40} />
+                      <Icon icon="streamline:cards" width={30} height={30} />
                     </Link>
                   </TooltipTrigger>
                   <TooltipContent side='bottom' sideOffset={5}>
@@ -34,7 +34,7 @@ function App() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link to="/by-owner">
-                      <Icon icon="streamline:search-visual" width={40} height={40} />         
+                      <Icon icon="streamline:search-visual" width={30} height={30} />         
                     </Link>
                   </TooltipTrigger>
                   <TooltipContent side='bottom' sideOffset={5}>

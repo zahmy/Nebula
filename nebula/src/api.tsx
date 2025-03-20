@@ -16,24 +16,12 @@ export interface Objekts_ {
   accent_color: string;
 }
 
-export interface Objekts_Owner {
+export interface Objekts_Owner extends Objekts_ {
   owner?: string;
   minted_at: string;
   received_at: string;
   serial: string;
   transferable: boolean;
-  created_at: string;
-  season: string;
-  member: string;
-  artist: string;
-  collection_no: string;
-  class: string;
-  thumbnail_image: string;
-  front_image: string;
-  back_image: string;
-  background_color: string;
-  text_color: string;
-  accent_color: string;
 }
 
 async function sendQuery(sql: string, params: string[]) {

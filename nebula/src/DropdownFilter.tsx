@@ -46,7 +46,7 @@ function FilterDropdown({
               : `${label}`}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56">
+        <DropdownMenuContent className="w-56 bg-black/50 backdrop-blur-md border border-gray-200/20 shadow-lg rounded-md">
           <DropdownMenuLabel>{label}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {items.map((item) => (
