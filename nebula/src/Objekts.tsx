@@ -1,7 +1,7 @@
 import ShowObjekts from "./ShowObjekts";
 import FilterDropdown from "./DropdownFilter";
 import Search from "./Search";
-import { fetchObjekts, Objekts_ } from "./api";
+import { fetchObjekts, Objekts_Owner } from "./api";
 import { DisplayObjekts } from "./DisplayObjekts";
 
 function Objekts() {
@@ -28,7 +28,10 @@ function Objekts() {
     searchQuery,
     setSearchQuery,
     resetFiltersAndSearch,
-  } = DisplayObjekts<Objekts_>({ fetchFunction: fetchObjekts });
+  } = DisplayObjekts<Objekts_Owner>({
+    fetchFunction: fetchObjekts,
+    reqeuireOwner: false,
+  });
 
   return (
     <div className="min-h-screen">
@@ -54,7 +57,7 @@ function Objekts() {
           items={artists}
           selectedItems={selectedArtists}
           onSelectionChange={handleArtistsChange}
-          disabled={false}
+          disabled={disabledFilters.artists}
         />
 
         {/* Season選單 */}

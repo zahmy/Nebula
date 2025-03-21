@@ -22,6 +22,7 @@ interface SearchProps {
       members?: boolean;
       seasons?: boolean;
       classes?: boolean;
+      artists?: boolean;
     };
   }) => void;
 }
@@ -35,7 +36,6 @@ function Search({
   setSearchQuery,
   onReset,
 }: SearchProps) {
-
   // 定義season縮寫
   const seasonMapping: { [key: string]: string } = {
     A: "Atom01",
@@ -56,6 +56,7 @@ function Search({
         members?: boolean;
         seasons?: boolean;
         classes?: boolean;
+        artists?: boolean;
       };
     }) => {
       if (onMatchesChange) {
@@ -73,6 +74,7 @@ function Search({
       members?: boolean;
       seasons?: boolean;
       classes?: boolean;
+      artists?: boolean;
     } = {};
 
     if (searchQuery.length > 0) {
@@ -85,12 +87,19 @@ function Search({
       const hasInvalidCharacters = /[^a-zA-Z0-9\s]/.test(query);
       if (hasInvalidCharacters) {
         console.log("Invalid input: only special characters detected.");
+        disabledFilters.members = true;
+        disabledFilters.seasons = true;
+        disabledFilters.classes = true;
+        disabledFilters.artists = true;
+        console.log("disabledFilters:", disabledFilters);
         handleMatches({
           search: true,
           members: [],
           seasons: [],
           collections: [],
+          disabledFilters,
         });
+
         return;
       }
 
@@ -98,59 +107,10 @@ function Search({
       queryArray.forEach((substring) => {
         console.log("我在遍歷substing: ", substring);
         const seasonFullName = seasonMapping[substring[0].toUpperCase()];
-        const firstChar = substring[0];
         const stringAfterFirstChar = substring.slice(1);
 
-        // 如果子字串第一個字是英文 (例：A、G、Z)
-        if (/[a-zA-Z]/.test(firstChar)) {
-          console.log("這個子字串的第一個字是: ", firstChar);
-
-          // 如果第一個字是season縮寫 (例：A、B、C、D、E)
-          if (seasonFullName) {
-            console.log("代表季節是: ", seasonFullName);
-
-            seasonMatches = [...new Set([...seasonMatches, seasonFullName])];
-            console.log("seasonMatches在這: ", seasonMatches);
-            disabledFilters.seasons = true;
-
-            // 如果第一個字後面接的是數字 (例：D2、D20、D207、D2077)
-            if (/[0-9]/.test(stringAfterFirstChar)) {
-              const newCollections = collections.filter((collection) =>
-                collection.startsWith(stringAfterFirstChar)
-              );
-
-              collectionMatches = [
-                ...new Set([...collectionMatches, ...newCollections]),
-              ];
-              console.log("collectionMatches在這: ", collectionMatches);
-              disabledFilters.classes = true;
-
-              // 如果第一個字後面接的是英文 (例：Da、Dahyun)
-            } else if (/[a-zA-Z]/.test(stringAfterFirstChar)) {
-              const newMembers = members.filter((member) => {
-                return member
-                  .toLowerCase()
-                  .includes(stringAfterFirstChar.toLowerCase());
-              });
-
-              memberMatches = [...new Set([...memberMatches, ...newMembers])];
-              console.log("memberMatches在這: ", memberMatches);
-              disabledFilters.members = true;
-            }
-
-            // 如果第一個字不是season縮寫 (例：G、Z)
-          } else {
-            const newMembers = members.filter((member) => {
-              return member.toLowerCase().includes(substring.toLowerCase());
-            });
-
-            memberMatches = [...new Set([...memberMatches, ...newMembers])];
-            console.log("memberMatches在這: ", memberMatches);
-            disabledFilters.members = true;
-          }
-
-          // 如果子字串第一個字是數字 (例：1、3、7)
-        } else if (!/[a-zA-Z]/.test(substring[0])) {
+        // 如果子字串是數字開頭 (例：1、201)
+        if (!/[a-zA-Z]/.test(substring[0])) {
           const newCollections = collections.filter((collection) =>
             collection.startsWith(substring)
           );
@@ -160,8 +120,68 @@ function Search({
           console.log("collectionMatches在這: ", collectionMatches);
           disabledFilters.classes = true;
         }
+
+        // 如果子字串只有一個字且是season縮寫 (例：A、B、C、D、E)
+        if (substring.length === 1 && seasonFullName) {
+          console.log("代表季節是: ", seasonFullName);
+
+          seasonMatches = [...new Set([...seasonMatches, seasonFullName])];
+          console.log("seasonMatches在這: ", seasonMatches);
+          disabledFilters.seasons = true;
+
+          // 如果子字串只有一個字但不是season縮寫 (例：G、Z)
+        } else if (substring.length === 1 && !seasonFullName) {
+          const newMembers = members.filter((member) =>
+            member.toLowerCase().includes(substring.toLowerCase())
+          );
+          memberMatches = [...new Set([...memberMatches, ...newMembers])];
+          console.log("memberMatches在這: ", memberMatches);
+          disabledFilters.members = true;
+          disabledFilters.artists = true;
+        }
+
+        // 如果第一個字後面接的是數字 (例：D2、D20、D207、D2077)
+        if (seasonFullName && /[0-9]/.test(stringAfterFirstChar)) {
+          const newCollections = collections.filter((collection) =>
+            collection.startsWith(stringAfterFirstChar)
+          );
+          collectionMatches = [
+            ...new Set([...collectionMatches, ...newCollections]),
+          ];
+          console.log("collectionMatches在這: ", collectionMatches);
+          seasonMatches = [...new Set([...seasonMatches, seasonFullName])];
+
+          disabledFilters.seasons = true;
+          disabledFilters.classes = true;
+        }
+
+        console.log("我在這: ", stringAfterFirstChar);
+
+        // 如果第一個字後面接的是英文 (例：Da、Dahyun)
+        if (/[a-zA-Z]/.test(stringAfterFirstChar)) {
+          const newMembers = members.filter((member) => {
+            return member
+              .toLowerCase()
+              .includes(stringAfterFirstChar.toLowerCase());
+          });
+
+          memberMatches = [...new Set([...memberMatches, ...newMembers])];
+          console.log("memberMatches在這: ", memberMatches);
+          disabledFilters.members = true;
+          disabledFilters.artists = true;
+        }
       });
 
+      if (
+        memberMatches.length === 0 &&
+        seasonMatches.length === 0 &&
+        collectionMatches.length === 0
+      ) {
+        disabledFilters.members = true;
+        disabledFilters.seasons = true;
+        disabledFilters.classes = true;
+        disabledFilters.artists = true;
+      }
       // 檢查字串是否包含member
       const memberTermIndex = queryArray.findIndex((term) =>
         members.some((m) => m.toLowerCase().includes(term.toLowerCase()))
@@ -227,10 +247,7 @@ function Search({
         className="mr-2"
       ></Input>
 
-      <Button
-        onClick={() => onReset()}
-        className=""
-      >
+      <Button onClick={() => onReset()} className="">
         RESET
       </Button>
     </div>

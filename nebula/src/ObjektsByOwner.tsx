@@ -3,7 +3,6 @@ import FilterDropdown from "./DropdownFilter";
 import Search from "./Search";
 import { fetchObjekts, Objekts_Owner } from "./api";
 import { Input } from "./components/ui/input";
-import { Button } from "./components/ui/button";
 import { DisplayObjekts } from "./DisplayObjekts";
 
 function ObjektsByOwner() {
@@ -54,17 +53,15 @@ function ObjektsByOwner() {
     handleMatchesChange,
     owner,
     setOwner,
-    setLoading,
-    setError,
-    setObjekts,
     searchQuery,
     setSearchQuery,
     resetFiltersAndSearch,
   } = DisplayObjekts<Objekts_Owner>({
     fetchFunction: wrappedFetchObjektsByOwner,
-    defaultOwner: "",
+    reqeuireOwner: true,
   });
 
+  /*
   // 處理搜尋按鈕行為，之後討論要不要移除
   const handleFetchObjekts = () => {
     if (!owner) {
@@ -103,6 +100,7 @@ function ObjektsByOwner() {
         setObjekts([]);
       });
   };
+  */
 
   const remind = !owner.length ? "Please enter an address to search" : "";
 
@@ -131,7 +129,7 @@ function ObjektsByOwner() {
             items={artists}
             selectedItems={selectedArtists}
             onSelectionChange={handleArtistsChange}
-            disabled={false}
+            disabled={disabledFilters.artists}
           />
 
           {/* Season選單 */}
@@ -168,14 +166,6 @@ function ObjektsByOwner() {
             onChange={(e) => setOwner(e.target.value.toLowerCase())}
             placeholder="Enter an address"
           />
-
-          <Button
-            onClick={handleFetchObjekts}
-            disabled={loading}
-            className="bg-accent text-white hover:bg-accent/90 mr-5"
-          >
-            {loading ? "Loading..." : "Search"}
-          </Button>
 
           {remind}
         </div>

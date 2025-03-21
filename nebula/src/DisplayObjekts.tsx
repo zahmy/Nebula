@@ -18,6 +18,7 @@ interface DisabledFilters {
   members?: boolean;
   seasons?: boolean;
   classes?: boolean;
+  artists?: boolean;
 }
 
 interface Matches {
@@ -38,12 +39,12 @@ interface UseObjektsDataOptions<T> {
     artist: string[],
     owner?: string
   ) => Promise<T[]>;
-  defaultOwner?: string;
+  reqeuireOwner?: boolean;
 }
 
 export function DisplayObjekts<T extends ObjektType>({
   fetchFunction,
-  defaultOwner = "",
+  reqeuireOwner = false,
 }: UseObjektsDataOptions<T>) {
   const [objekts, setObjekts] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,13 +53,13 @@ export function DisplayObjekts<T extends ObjektType>({
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
-  const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
+  const [selectedArtists, setSelectedArtists] = useState<string[]>(["tripleS"]);
   const [columns, setColumns] = useState(getColumns());
   const [collections, setCollections] = useState<string[]>([]);
   const [seasons, setSeasons] = useState<string[]>([]);
   const [classes, setClasses] = useState<string[]>([]);
   const [members, setMembers] = useState<string[]>([]);
-  const [artists, setArtists] = useState<string[]>([]);
+  const [artists] = useState<string[]>(["tripleS", "artms"]);
   const [searchFilters, setSearchFilters] = useState<FilterOptions>({
     members: [],
     seasons: [],
@@ -66,9 +67,10 @@ export function DisplayObjekts<T extends ObjektType>({
   });
   const [search, setSearch] = useState<boolean>(false);
   const [disabledFilters, setDisabledFilters] = useState<DisabledFilters>({});
-  const [owner, setOwner] = useState<string>(defaultOwner);
-  const[searchQuery, setSearchQuery] = useState<string>("");
-  console.log("Initial owner:", defaultOwner);
+  const [owner, setOwner] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [allSeasons, setAllSeasons] = useState<string[]>([]);
+  const [initialObjekts, setInitialObjekts] = useState<T[]>([]);
 
   // 不同視窗寬度對應的Objekts顯示行數
   function getColumns() {
@@ -111,7 +113,7 @@ export function DisplayObjekts<T extends ObjektType>({
         ? searchFilters.collections
         : selectedCollections;
     const finalArtists = selectedArtists;
- 
+
     return {
       seasons: finalSeasons,
       classes: selectedClasses,
@@ -121,54 +123,104 @@ export function DisplayObjekts<T extends ObjektType>({
     };
   };
 
+  // 初次獲取數據
+  useEffect(() => {
+    if (reqeuireOwner && !owner) {
+      setObjekts([]);
+      setLoading(false);
+      return;
+    }
+
+    const fetchInitialData = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchFunction(
+          false,
+          [],
+          [],
+          [],
+          [],
+          ["tripleS"],
+          owner || undefined
+        );
+        setObjekts(data);
+        setInitialObjekts(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInitialData();
+  }, [owner]);
+
   // 透過API取得Objekts
   useEffect(() => {
-    const { seasons, classes, members, collections, artists } = getFinalFilters();
-    console.log("useEffect被觸發:", {
-      search,
-      seasons,
-      classes,
-      members,
-      collections,
-      artists,
-      owner,
-    });
-    setLoading(true);
-    fetchFunction(
-      search,
-      seasons,
-      classes,
-      members,
-      collections,
-      artists,
-      owner || undefined
-    )
-      .then((data) => {
-        if (search && searchFilters.members.length > 0) {
-          const memberOrder = new Map(
-            searchFilters.members.map((member, index) => [
-              member.toLowerCase(),
-              index,
-            ])
-          );
-          data.sort((a, b) => {
-            const aIndex =
-              memberOrder.get((a as ObjektType).member.toLowerCase()) ??
-              Infinity;
-            const bIndex =
-              memberOrder.get((b as ObjektType).member.toLowerCase()) ??
-              Infinity;
-            return aIndex - bIndex;
+    const { seasons, classes, members, collections, artists } =
+      getFinalFilters();
+
+    const isInitialState =
+      seasons.length === 0 &&
+      classes.length === 0 &&
+      members.length === 0 &&
+      collections.length === 0 &&
+      artists.length === 1 &&
+      artists[0] === "tripleS" &&
+      !search;
+
+    if (isInitialState) {
+      // 如果回到初始狀態，使用快取的初始數據
+      setObjekts(initialObjekts);
+    } else {
+      const fetchFilteredData = async () => {
+        console.log("useEffect被觸發:", {
+          search,
+          seasons,
+          classes,
+          members,
+          collections,
+          artists,
+          owner,
+        });
+        setLoading(true);
+        fetchFunction(
+          search,
+          seasons,
+          classes,
+          members,
+          collections,
+          artists,
+          owner || undefined
+        )
+          .then((data) => {
+            if (search && searchFilters.members.length > 0) {
+              const memberOrder = new Map(
+                searchFilters.members.map((member, index) => [
+                  member.toLowerCase(),
+                  index,
+                ])
+              );
+              data.sort((a, b) => {
+                const aIndex =
+                  memberOrder.get((a as ObjektType).member.toLowerCase()) ??
+                  Infinity;
+                const bIndex =
+                  memberOrder.get((b as ObjektType).member.toLowerCase()) ??
+                  Infinity;
+                return aIndex - bIndex;
+              });
+            }
+            console.log("Data received:", data);
+            setObjekts(data);
+            setLoading(false);
+          })
+          .catch((err) => {
+            setError(err.message);
+            setLoading(false);
           });
-        }
-        console.log("Data received:", data);
-        setObjekts(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      };
+      fetchFilteredData();
+    }
   }, [
     selectedSeasons,
     selectedClasses,
@@ -182,13 +234,50 @@ export function DisplayObjekts<T extends ObjektType>({
     owner,
   ]);
 
+  // 定義 artist 和 members 的對應關係
+  const artistMembersMap: { [key: string]: string[] } = {
+    tripleS: [
+      "SeoYeon",
+      "HyeRin",
+      "JiWoo",
+      "ChaeYeon",
+      "YooYeon",
+      "SooMin",
+      "NaKyoung",
+      "YuBin",
+      "Kaede",
+      "DaHyun",
+      "Kotone",
+      "YeonJi",
+      "Nien",
+      "SoHyun",
+      "Xinyu",
+      "Mayu",
+      "Lynn",
+      "JooBin",
+      "HaYeon",
+      "ShiOn",
+      "ChaeWon",
+      "Sullin",
+      "SeoAh",
+      "JiYeon",
+    ],
+    artms: ["HeeJin", "HaSeul", "KimLip", "JinSoul", "Choerry"], // 假設 artms 的成員名單
+  };
+
+  const allMembers = Array.from(
+    new Set([...artistMembersMap.tripleS, ...artistMembersMap.artms])
+  );
+
   // 設定seasons、classes、members
   useEffect(() => {
     setLoading(true);
-    Promise.all([fetchAllCollections(), fetchUniqueSeasons()])
+    Promise.all([
+      fetchAllCollections(),
+      fetchUniqueSeasons(["tripleS", "artms"]),
+    ])
       .then(([collectionNosData, seasonsData]) => {
         setCollections(collectionNosData);
-        setSeasons(seasonsData);
         setClasses([
           "First",
           "Double",
@@ -197,36 +286,8 @@ export function DisplayObjekts<T extends ObjektType>({
           "Welcome",
           "Zero",
         ]);
-        setMembers([
-          "SeoYeon",
-          "HyeRin",
-          "JiWoo",
-          "ChaeYeon",
-          "YooYeon",
-          "SooMin",
-          "NaKyoung",
-          "YuBin",
-          "Kaede",
-          "DaHyun",
-          "Kotone",
-          "YeonJi",
-          "Nien",
-          "SoHyun",
-          "Xinyu",
-          "Mayu",
-          "Lynn",
-          "JooBin",
-          "HaYeon",
-          "ShiOn",
-          "ChaeWon",
-          "Sullin",
-          "SeoAh",
-          "JiYeon",
-        ]);
-        setArtists([
-          "tripleS",
-          "artms",
-        ])
+        setSeasons(seasonsData);
+        setAllSeasons(seasonsData);
         setLoading(false);
       })
       .catch((err) => {
@@ -235,6 +296,34 @@ export function DisplayObjekts<T extends ObjektType>({
         setLoading(false);
       });
   }, []);
+
+  // 根據 selectedArtists 動態更新 members 和 seasons
+  useEffect(() => {
+    const updateFilters = async () => {
+      if (selectedArtists.length === 0) {
+        setMembers(allMembers);
+        setSeasons(allSeasons);
+      } else {
+        // 根據 selectedArtists 從 API 獲取對應的 members 和 seasons
+        const newMembers = selectedArtists
+          .flatMap((artist) => artistMembersMap[artist] || [])
+          .filter((member, index, self) => self.indexOf(member) === index);
+
+        const newSeasons = await fetchUniqueSeasons(selectedArtists);
+
+        setMembers(newMembers);
+        setSelectedMembers((prev) =>
+          prev.filter((member) => newMembers.includes(member))
+        );
+
+        setSeasons(newSeasons);
+        setSelectedSeasons((prev) =>
+          prev.filter((season) => newSeasons.includes(season))
+        );
+      }
+    };
+    updateFilters();
+  }, [selectedArtists]);
 
   const toggleSelection = <T extends string>(prev: T[], value: T): T[] =>
     value
@@ -293,7 +382,6 @@ export function DisplayObjekts<T extends ObjektType>({
     setSearch(false);
     setDisabledFilters({});
   }, []);
-  
 
   return {
     objekts,

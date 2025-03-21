@@ -76,10 +76,10 @@ export async function fetchObjekts<T extends Objekts_ | Objekts_Owner>(
     ? "SELECT o.owner, o.minted_at, o.received_at, o.serial, o.transferable, " +
       "c.season, c.member, c.artist, c.collection_no, c.class, c.thumbnail_image, " +
       "c.front_image, c.back_image, c.background_color, c.text_color, c.accent_color " +
-      "FROM objekt o JOIN collection c ON o.collection_id = c.id WHERE c.on_offline = 'online'"
+      "FROM objekt o JOIN collection c ON o.collection_id = c.id WHERE c.artist IN ('tripleS', 'artms')"
     : "SELECT c.created_at, c.season, c.member, c.artist, c.collection_no, c.class, " +
       "c.thumbnail_image, c.front_image, c.back_image, c.background_color, c.text_color, c.accent_color " +
-      "FROM collection c WHERE c.on_offline = 'online'";
+      "FROM collection c WHERE c.artist IN ('tripleS', 'artms')";
 
   const params: string[] = [];
   let sql = baseSql;
@@ -125,15 +125,15 @@ export async function fetchObjekts<T extends Objekts_ | Objekts_Owner>(
     paramIndex += collection.length;
   }
 
-    // 處理artist過濾條件
-    if (artist.length > 0) {
-      const artistPlaceholders = artist
-        .map((_, index) => `$${paramIndex + index}`)
-        .join(", ");
-      sql += ` AND c.artist IN (${artistPlaceholders})`;
-      params.push(...artist);
-      paramIndex += artist.length;
-    }
+  // 處理artist過濾條件
+  if (artist.length > 0) {
+    const artistPlaceholders = artist
+      .map((_, index) => `$${paramIndex + index}`)
+      .join(", ");
+    sql += ` AND c.artist IN (${artistPlaceholders})`;
+    params.push(...artist);
+    paramIndex += artist.length;
+  }
 
   // 處理owner過濾條件
   if (owner) {
@@ -196,25 +196,18 @@ export async function fetchAllCollections(): Promise<string[]> {
 }
 
 //用來取得所有season
-export async function fetchUniqueSeasons(): Promise<string[]> {
-  const sql =
-    "SELECT DISTINCT season FROM collection WHERE artist = 'tripleS' ORDER BY season";
-  const data = await sendQuery(sql, []);
+export async function fetchUniqueSeasons(artists: string[]): Promise<string[]> {
+  const artistPlaceholders = artists.map((_, i) => `$${i + 1}`).join(", ");
+  const sql = `SELECT DISTINCT season FROM collection WHERE artist IN (${artistPlaceholders}) ORDER BY season`;
+  const data = await sendQuery(sql, artists);
   return data.map(([season]: [string]) => season);
 }
 
-/* 用來取得所有class，暫時沒用到
-export async function fetchUniqueClasses(): Promise<string[]> {
-  const sql = "SELECT DISTINCT class FROM collection WHERE artist = 'tripleS' ORDER BY class";
-  const data = await sendQuery(sql, []);
-  return data.map(([class_]: [string]) => class_);
-}
-*/
-
 /* 用來取得所有member，暫時沒用到
-export async function fetchUniqueMembers(): Promise<string[]> {
-  const sql = "SELECT DISTINCT member FROM collection WHERE artist = 'tripleS' ORDER BY member";
-  const data = await sendQuery(sql, []);
+export async function fetchUniqueMembers(artists: string[]): Promise<string[]> {
+  const artistPlaceholders = artists.map((_, i) => `$${i + 1}`).join(", ");
+  const sql = `SELECT DISTINCT member FROM collection WHERE artist IN (${artistPlaceholders}) ORDER BY member`;
+  const data = await sendQuery(sql, artists);
   return data.map(([member]: [string]) => member);
 }
 */
