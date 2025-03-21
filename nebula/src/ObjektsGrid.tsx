@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import { Objekts_Owner } from "./api";
+import { Objekts_Owner } from "./apis/api-objekts";
 import "./index.css";
 import { ObjektsSidebar } from "./ObjektsSidebar";
 
@@ -11,7 +11,11 @@ interface ShowObjektsProps {
   rowItems: Objekts_Owner[][];
 }
 
-function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
+export default function ObjektsGrid({
+  loading,
+  error,
+  rowItems,
+}: ShowObjektsProps) {
   const listRef = useRef<HTMLDivElement | null>(null);
 
   // 虛擬化：透過這些參數計算出目前視窗內應該要顯示哪幾列
@@ -96,5 +100,3 @@ function ShowObjekts({ loading, error, rowItems }: ShowObjektsProps) {
     </div>
   );
 }
-
-export default ShowObjekts;

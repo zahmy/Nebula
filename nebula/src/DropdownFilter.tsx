@@ -18,7 +18,7 @@ interface FilterDropdownProps {
   disabled?: boolean;
 }
 
-function FilterDropdown({
+export default function DropdownFilter({
   label,
   items,
   selectedItems,
@@ -70,4 +70,3 @@ function FilterDropdown({
   );
 }
 
-export default FilterDropdown;

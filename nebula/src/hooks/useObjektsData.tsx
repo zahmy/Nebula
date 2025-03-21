@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   fetchAllCollections,
   fetchUniqueSeasons,
   Objekts_,
   Objekts_Owner,
-} from "./api";
+} from "../apis/api-objekts";
 
 type ObjektType = Objekts_ | Objekts_Owner;
 
@@ -39,12 +39,12 @@ interface UseObjektsDataOptions<T> {
     artist: string[],
     owner?: string
   ) => Promise<T[]>;
-  reqeuireOwner?: boolean;
+  requireOwner?: boolean;
 }
 
-export function DisplayObjekts<T extends ObjektType>({
+export function useObjekts<T extends ObjektType>({
   fetchFunction,
-  reqeuireOwner = false,
+  requireOwner = false,
 }: UseObjektsDataOptions<T>) {
   const [objekts, setObjekts] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +54,6 @@ export function DisplayObjekts<T extends ObjektType>({
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [selectedArtists, setSelectedArtists] = useState<string[]>(["tripleS"]);
-  const [columns, setColumns] = useState(getColumns());
   const [collections, setCollections] = useState<string[]>([]);
   const [seasons, setSeasons] = useState<string[]>([]);
   const [classes, setClasses] = useState<string[]>([]);
@@ -71,32 +70,6 @@ export function DisplayObjekts<T extends ObjektType>({
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [allSeasons, setAllSeasons] = useState<string[]>([]);
   const [initialObjekts, setInitialObjekts] = useState<T[]>([]);
-
-  // 不同視窗寬度對應的Objekts顯示行數
-  function getColumns() {
-    if (window.innerWidth >= 1024) return 5;
-    if (window.innerWidth >= 768) return 3;
-    if (window.innerWidth >= 640) return 2;
-    return 1;
-  }
-
-  // 隨著視窗寬度動態調整Objekts顯示行數
-  useEffect(() => {
-    const handleResize = () => {
-      const newColumns = getColumns();
-      setColumns(newColumns);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // 全部Objekts所佔列數
-  const rows = Math.ceil(objekts.length / columns);
-
-  // 一個二維陣列，將Objekts以列為單位存放（因為渲染是一列一列的）
-  const rowItems = Array.from({ length: rows }, (_, rowIndex) =>
-    objekts.slice(rowIndex * columns, (rowIndex + 1) * columns)
-  );
 
   // 合併搜尋及選單的篩選條件
   const getFinalFilters = () => {
@@ -125,7 +98,7 @@ export function DisplayObjekts<T extends ObjektType>({
 
   // 初次獲取數據
   useEffect(() => {
-    if (reqeuireOwner && !owner) {
+    if (requireOwner && !owner) {
       setObjekts([]);
       setLoading(false);
       return;
@@ -268,7 +241,6 @@ export function DisplayObjekts<T extends ObjektType>({
   const allMembers = Array.from(
     new Set([...artistMembersMap.tripleS, ...artistMembersMap.artms])
   );
-
   // 設定seasons、classes、members
   useEffect(() => {
     setLoading(true);
@@ -400,7 +372,6 @@ export function DisplayObjekts<T extends ObjektType>({
     setSelectedCollections,
     selectedArtists,
     setSelectedArtists,
-    columns,
     collections,
     seasons,
     classes,
@@ -409,16 +380,16 @@ export function DisplayObjekts<T extends ObjektType>({
     searchFilters,
     search,
     disabledFilters,
-    rowItems,
-    handleSeasonsChange,
-    handleClassesChange,
-    handleMembersChange,
-    handleMatchesChange,
-    handleArtistsChange,
     owner,
     setOwner,
     searchQuery,
     setSearchQuery,
+    initialObjekts,
+    handleSeasonsChange,
+    handleClassesChange,
+    handleMembersChange,
+    handleArtistsChange,
+    handleMatchesChange,
     resetFiltersAndSearch,
   };
 }

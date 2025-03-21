@@ -1,9 +1,9 @@
-import ShowObjekts from "./ShowObjekts";
-import FilterDropdown from "./DropdownFilter";
-import Search from "./Search";
-import { fetchObjekts, Objekts_Owner } from "./api";
-import { Input } from "./components/ui/input";
-import { DisplayObjekts } from "./DisplayObjekts";
+import ObjektsGrid from "../ObjektsGrid";
+import FilterDropdown from "../DropdownFilter";
+import Search from "../SearchFilter";
+import { fetchObjekts, Objekts_Owner } from "../apis/api-objekts";
+import { Input } from "../components/ui/input";
+import { DisplayObjekts } from "../ObjektsLayout";
 
 function ObjektsByOwner() {
   const wrappedFetchObjektsByOwner = (
@@ -37,7 +37,6 @@ function ObjektsByOwner() {
     selectedSeasons,
     selectedClasses,
     selectedMembers,
-    selectedCollections,
     selectedArtists,
     collections,
     seasons,
@@ -53,54 +52,11 @@ function ObjektsByOwner() {
     handleMatchesChange,
     owner,
     setOwner,
-    searchQuery,
-    setSearchQuery,
     resetFiltersAndSearch,
   } = DisplayObjekts<Objekts_Owner>({
     fetchFunction: wrappedFetchObjektsByOwner,
-    reqeuireOwner: true,
+    requireOwner: true,
   });
-
-  /*
-  // 處理搜尋按鈕行為，之後討論要不要移除
-  const handleFetchObjekts = () => {
-    if (!owner) {
-      console.log("Address is empty, aborting fetch");
-      return;
-    }
-    console.log("Button clicked, fetching with address:", owner);
-    setLoading(true);
-    setError(null);
-    fetchObjekts(
-      false,
-      selectedSeasons,
-      selectedClasses,
-      selectedMembers,
-      selectedCollections,
-      selectedArtists,
-      owner
-    )
-      .then((data) => {
-        console.log("Button fetch result:", data);
-        setObjekts(
-          data.filter(
-            (obj): obj is Objekts_Owner =>
-              "minted_at" in obj &&
-              "received_at" in obj &&
-              "serial" in obj &&
-              "transferable" in obj
-          )
-        );
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.log("Button fetch error:", err.message);
-        setError(err.message);
-        setLoading(false);
-        setObjekts([]);
-      });
-  };
-  */
 
   const remind = !owner.length ? "Please enter an address to search" : "";
 
@@ -113,14 +69,8 @@ function ObjektsByOwner() {
             members={members}
             seasons={seasons}
             collections={collections}
-            selectedMembers={selectedMembers}
-            selectedSeasons={selectedSeasons}
-            selectedClasses={selectedClasses}
-            selectedCollections={selectedCollections}
             onMatchesChange={handleMatchesChange}
             onReset={resetFiltersAndSearch}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
           ></Search>
 
           {/* Artist選單 */}
@@ -169,7 +119,7 @@ function ObjektsByOwner() {
 
           {remind}
         </div>
-        <ShowObjekts loading={loading} error={error} rowItems={rowItems} />
+        <ObjektsGrid loading={loading} error={error} rowItems={rowItems} />
       </div>
     </div>
   );

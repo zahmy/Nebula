@@ -1,8 +1,8 @@
-import ShowObjekts from "./ShowObjekts";
-import FilterDropdown from "./DropdownFilter";
-import Search from "./Search";
-import { fetchObjekts, Objekts_Owner } from "./api";
-import { DisplayObjekts } from "./DisplayObjekts";
+import ObjektsGrid from "../ObjektsGrid";
+import FilterDropdown from "../DropdownFilter";
+import Search from "../SearchFilter";
+import { fetchObjekts, Objekts_Owner } from "../apis/api-objekts";
+import { DisplayObjekts } from "../ObjektsLayout";
 
 function Objekts() {
   const {
@@ -11,7 +11,6 @@ function Objekts() {
     selectedSeasons,
     selectedClasses,
     selectedMembers,
-    selectedCollections,
     selectedArtists,
     collections,
     seasons,
@@ -25,12 +24,10 @@ function Objekts() {
     handleMembersChange,
     handleMatchesChange,
     handleArtistsChange,
-    searchQuery,
-    setSearchQuery,
     resetFiltersAndSearch,
   } = DisplayObjekts<Objekts_Owner>({
     fetchFunction: fetchObjekts,
-    reqeuireOwner: false,
+    requireOwner: false,
   });
 
   return (
@@ -41,14 +38,8 @@ function Objekts() {
           members={members}
           seasons={seasons}
           collections={collections}
-          selectedMembers={selectedMembers}
-          selectedSeasons={selectedSeasons}
-          selectedClasses={selectedClasses}
-          selectedCollections={selectedCollections}
           onMatchesChange={handleMatchesChange}
           onReset={resetFiltersAndSearch}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
         />
 
         {/* Artist選單 */}
@@ -87,7 +78,7 @@ function Objekts() {
           disabled={disabledFilters.members}
         />
       </div>
-      <ShowObjekts loading={loading} error={error} rowItems={rowItems} />
+      <ObjektsGrid loading={loading} error={error} rowItems={rowItems} />
     </div>
   );
 }
