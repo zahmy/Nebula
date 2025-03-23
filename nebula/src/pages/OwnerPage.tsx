@@ -1,128 +1,115 @@
-import ObjektsGrid from "../ObjektsGrid";
-import FilterDropdown from "../DropdownFilter";
-import Search from "../SearchFilter";
+import ObjektsGrid from "@/features/objekt/components/ObjektGrid";
+import DropdownFilter from "@/features/filters/components/DropdownFilter";
+import SearchFilter from "@/features/filters/components/SearchFilter";
 import { fetchObjekts, Objekts_Owner } from "../apis/api-objekts";
 import { Input } from "../components/ui/input";
-import { DisplayObjekts } from "../ObjektsLayout";
+import { useObjektsLayout } from "@/features/objekt/utils/useObjektLayout";
+import { useState } from "react";
 
-function ObjektsByOwner() {
-  const wrappedFetchObjektsByOwner = (
-    search?: boolean,
-    season?: string[],
-    class_?: string[],
-    member?: string[],
-    collection?: string[],
-    artist?: string[],
-    owner?: string
-  ): Promise<Objekts_Owner[]> => {
-    if (!owner) {
-      return Promise.reject(
-        new Error("Address is required for ObjektsByOwner")
-      );
-    }
-    return fetchObjekts(
-      search || false,
-      season || [],
-      class_ || [],
-      member || [],
-      collection || [],
-      artist || [],
-      owner
-    );
-  };
+export default function OwnerPage() {
+	const [owner, setOwner] = useState<string>("");
 
-  const {
-    loading,
-    error,
-    selectedSeasons,
-    selectedClasses,
-    selectedMembers,
-    selectedArtists,
-    collections,
-    seasons,
-    classes,
-    members,
-    artists,
-    disabledFilters,
-    rowItems,
-    handleSeasonsChange,
-    handleClassesChange,
-    handleMembersChange,
-    handleArtistsChange,
-    handleMatchesChange,
-    owner,
-    setOwner,
-    resetFiltersAndSearch,
-  } = DisplayObjekts<Objekts_Owner>({
-    fetchFunction: wrappedFetchObjektsByOwner,
-    requireOwner: true,
-  });
+	// console.log("Owner: ", owner);
+	const wrappedFetchObjektsByOwner = (
+		search?: boolean,
+		artist?: string[],
+		member?: string[],
+		season?: string[],
+		collection?: string[],
+		class_?: string[],
+		owner?: string
+	): Promise<Objekts_Owner[]> => {
+		if (!owner) {
+			return Promise.reject(
+				new Error("Address is required for ObjektsByOwner")
+			);
+		}
+		return fetchObjekts(
+			search || false,
+			artist || [],
+			member || [],
+			season || [],
+			collection || [],
+			class_ || [],
+			owner
+		);
+	};
 
-  const remind = !owner.length ? "Please enter an address to search" : "";
+	const { filters, gridData } = useObjektsLayout<Objekts_Owner>({
+		fetchFunction: wrappedFetchObjektsByOwner,
+		requireOwner: true,
+		owner,
+	});
 
-  return (
-    <div>
-      <div className="min-h-screen">
-        <div className="flex items-center ml-5 mt-2">
-          {/* 搜尋 */}
-          <Search
-            members={members}
-            seasons={seasons}
-            collections={collections}
-            onMatchesChange={handleMatchesChange}
-            onReset={resetFiltersAndSearch}
-          ></Search>
+	const remind = !owner.length ? "Please enter an address to search" : "";
 
-          {/* Artist選單 */}
-          <FilterDropdown
-            label="Artist"
-            items={artists}
-            selectedItems={selectedArtists}
-            onSelectionChange={handleArtistsChange}
-            disabled={disabledFilters.artists}
-          />
+	return (
+		<div>
+			<div className="min-h-screen">
+				<div className="flex items-center ml-5 mt-2">
+					{/* Objekt搜尋框 */}
+					<SearchFilter
+						members={filters.available.members}
+						seasons={filters.available.seasons}
+						collections={filters.available.collections}
+						onMatchesChange={filters.handleMatchesChange}
+						onReset={filters.resetDropdownAndSearch}
+					/>
 
-          {/* Season選單 */}
-          <FilterDropdown
-            label="Season"
-            items={seasons}
-            selectedItems={selectedSeasons}
-            onSelectionChange={handleSeasonsChange}
-            disabled={disabledFilters.seasons}
-          />
+					{/* Artist選單 */}
+					<DropdownFilter
+						label="Artist"
+						items={["tripleS", "artms"]}
+						selectedItems={filters.selected.artists}
+						onSelectionChange={filters.handleArtistsChange}
+						disabled={filters.dropdownFiltersDisabled.artists}
+					/>
 
-          {/* Class選單 */}
-          <FilterDropdown
-            label="Class"
-            items={classes}
-            selectedItems={selectedClasses}
-            onSelectionChange={handleClassesChange}
-            disabled={disabledFilters.classes}
-          />
+					{/* Member選單 */}
+					<DropdownFilter
+						label="Member"
+						items={filters.available.members}
+						selectedItems={filters.selected.members}
+						onSelectionChange={filters.handleMembersChange}
+						disabled={filters.dropdownFiltersDisabled.members}
+					/>
 
-          {/* Member選單 */}
-          <FilterDropdown
-            label="Member"
-            items={members}
-            selectedItems={selectedMembers}
-            onSelectionChange={handleMembersChange}
-            disabled={disabledFilters.members}
-          />
+					{/* Season選單 */}
+					<DropdownFilter
+						label="Season"
+						items={filters.available.seasons}
+						selectedItems={filters.selected.seasons}
+						onSelectionChange={filters.handleSeasonsChange}
+						disabled={filters.dropdownFiltersDisabled.seasons}
+					/>
 
-          <Input
-            type="text"
-            value={owner}
-            className="w-50 mr-2"
-            onChange={(e) => setOwner(e.target.value.toLowerCase())}
-            placeholder="Enter an address"
-          />
+					{/* Class選單 */}
+					<DropdownFilter
+						label="Class"
+						items={filters.available.classes}
+						selectedItems={filters.selected.classes}
+						onSelectionChange={filters.handleClassesChange}
+						disabled={filters.dropdownFiltersDisabled.classes}
+					/>
 
-          {remind}
-        </div>
-        <ObjektsGrid loading={loading} error={error} rowItems={rowItems} />
-      </div>
-    </div>
-  );
+					{/* Owner搜尋框 */}
+					<Input
+						type="text"
+						value={owner}
+						className="w-50 mr-2"
+						onChange={(e) => setOwner(e.target.value.toLowerCase())}
+						placeholder="Enter an address"
+					/>
+
+					{remind}
+				</div>
+				{/* 以Grid排列方式顯示Objekts */}
+				<ObjektsGrid
+					loading={gridData.loading}
+					error={gridData.error}
+					rowItems={gridData.rowItems}
+				/>
+			</div>
+		</div>
+	);
 }
-
-export default ObjektsByOwner;
