@@ -1,3 +1,16 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "askForPassword": true,
+      "driver": "PostgreSQL",
+      "name": "cosmo-db",
+      "username": "postgres",
+      "database": "apollo-objekts"
+    }
+  ],
+  "postman.settings.dotenv-detection-notification-visibility": false
 }

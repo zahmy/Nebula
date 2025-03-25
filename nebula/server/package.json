@@ -1,0 +1,16 @@
+{
+    "scripts": {
+        "start:dev": "ts-node-dev --transpile-only index.ts"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.49.1",
+        "dotenv": "^16.4.7",
+        "ts-node": "^10.9.2",
+        "ts-node-dev": "^2.0.0",
+        "ts-pattern": "^5.6.2"
+    },
+    "devDependencies": {
+        "@types/axios-mock-adapter": "^1.9.0",
+        "axios-mock-adapter": "^2.1.0"
+    }
+}
